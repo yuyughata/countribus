@@ -59,6 +59,244 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["location_aliases"]["Insert"]>;
         Relationships: [];
       };
+      bookings: {
+        Row: {
+          id: string;
+          reference: string;
+          vendor_id: string;
+          schedule_id: string;
+          contact_name: string;
+          contact_phone: string;
+          contact_email: string | null;
+          passenger_count: number;
+          total_fare_kobo: number;
+          luggage_fee_kobo: number;
+          discount_kobo: number;
+          grand_total_kobo: number;
+          currency: string;
+          status: Database["public"]["Enums"]["booking_status"];
+          created_by: string | null;
+          hold_token: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          reference: string;
+          vendor_id: string;
+          schedule_id: string;
+          contact_name: string;
+          contact_phone: string;
+          contact_email?: string | null;
+          passenger_count: number;
+          total_fare_kobo: number;
+          luggage_fee_kobo?: number;
+          discount_kobo?: number;
+          grand_total_kobo: number;
+          currency?: string;
+          status?: Database["public"]["Enums"]["booking_status"];
+          created_by?: string | null;
+          hold_token?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["bookings"]["Insert"]>;
+        Relationships: [];
+      };
+      passengers: {
+        Row: {
+          id: string;
+          booking_id: string;
+          full_name: string;
+          phone: string | null;
+          email: string | null;
+          emergency_contact: string | null;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          full_name: string;
+          phone?: string | null;
+          email?: string | null;
+          emergency_contact?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["passengers"]["Insert"]>;
+        Relationships: [];
+      };
+      booking_passengers: {
+        Row: {
+          id: string;
+          booking_id: string;
+          passenger_id: string;
+          schedule_id: string;
+          seat_id: string;
+          seat_label: string;
+          fare_kobo: number;
+          boarding_status: Database["public"]["Enums"]["boarding_status"];
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          passenger_id: string;
+          schedule_id: string;
+          seat_id: string;
+          seat_label: string;
+          fare_kobo: number;
+          boarding_status?: Database["public"]["Enums"]["boarding_status"];
+        };
+        Update: Partial<Database["public"]["Tables"]["booking_passengers"]["Insert"]>;
+        Relationships: [];
+      };
+      booking_status_history: {
+        Row: {
+          id: string;
+          booking_id: string;
+          from_status: Database["public"]["Enums"]["booking_status"] | null;
+          to_status: Database["public"]["Enums"]["booking_status"];
+          actor_id: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          from_status?: Database["public"]["Enums"]["booking_status"] | null;
+          to_status: Database["public"]["Enums"]["booking_status"];
+          actor_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["booking_status_history"]["Insert"]>;
+        Relationships: [];
+      };
+      payment_transactions: {
+        Row: {
+          id: string;
+          booking_id: string;
+          provider: Database["public"]["Enums"]["payment_provider"];
+          provider_reference: string;
+          amount_kobo: number;
+          currency: string;
+          status: Database["public"]["Enums"]["payment_status"];
+          raw_meta: Json;
+          initialized_at: string;
+          verified_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          provider: Database["public"]["Enums"]["payment_provider"];
+          provider_reference: string;
+          amount_kobo: number;
+          currency?: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          raw_meta?: Json;
+          initialized_at?: string;
+          verified_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["payment_transactions"]["Insert"]>;
+        Relationships: [];
+      };
+      commission_rules: {
+        Row: {
+          id: string;
+          scope: string;
+          vendor_id: string | null;
+          rate_bps: number;
+          basis: Database["public"]["Enums"]["commission_basis"];
+          effective_from: string;
+          effective_to: string | null;
+        };
+        Insert: {
+          id?: string;
+          scope: string;
+          vendor_id?: string | null;
+          rate_bps: number;
+          basis?: Database["public"]["Enums"]["commission_basis"];
+          effective_from?: string;
+          effective_to?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["commission_rules"]["Insert"]>;
+        Relationships: [];
+      };
+      financial_ledger: {
+        Row: {
+          id: string;
+          booking_id: string | null;
+          vendor_id: string;
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"];
+          amount_kobo: number;
+          currency: string;
+          related_entry_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id?: string | null;
+          vendor_id: string;
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"];
+          amount_kobo: number;
+          currency?: string;
+          related_entry_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["financial_ledger"]["Insert"]>;
+        Relationships: [];
+      };
+      ticket_documents: {
+        Row: {
+          id: string;
+          booking_id: string;
+          passenger_id: string;
+          schedule_id: string;
+          qr_token: string;
+          storage_path: string | null;
+          document_version: number;
+          status: string;
+          generated_at: string;
+          revoked_at: string | null;
+          revoke_reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          passenger_id: string;
+          schedule_id: string;
+          qr_token?: string;
+          storage_path?: string | null;
+          document_version?: number;
+          status?: string;
+          generated_at?: string;
+          revoked_at?: string | null;
+          revoke_reason?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["ticket_documents"]["Insert"]>;
+        Relationships: [];
+      };
+      ticket_delivery_events: {
+        Row: {
+          id: string;
+          ticket_document_id: string;
+          channel: string;
+          recipient: string | null;
+          provider_message_id: string | null;
+          attempted_at: string;
+          delivery_status: string;
+          error: string | null;
+        };
+        Insert: {
+          id?: string;
+          ticket_document_id: string;
+          channel: string;
+          recipient?: string | null;
+          provider_message_id?: string | null;
+          attempted_at?: string;
+          delivery_status?: string;
+          error?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["ticket_delivery_events"]["Insert"]>;
+        Relationships: [];
+      };
       routes: {
         Row: {
           id: string;
@@ -427,11 +665,38 @@ export type Database = {
           available_seats: number;
         }[];
       };
+      create_booking_from_hold: {
+        Args: { p_schedule: string; p_hold_token: string; p_contact: Json; p_passengers: Json };
+        Returns: { booking_id: string; reference: string }[];
+      };
+      confirm_payment: {
+        Args: {
+          p_provider: Database["public"]["Enums"]["payment_provider"];
+          p_event_id: string;
+          p_reference: string;
+          p_amount_kobo: number;
+        };
+        Returns: string;
+      };
+      cancel_booking: { Args: { p_booking: string; p_reason?: string }; Returns: undefined };
     };
     Enums: {
       seat_type: "standard" | "window" | "aisle" | "driver" | "blocked";
       schedule_status: "draft" | "published" | "cancelled" | "departed" | "completed";
       seat_state: "available" | "booked" | "held" | "blocked";
+      booking_status: "pending_payment" | "paid" | "failed" | "cancelled" | "refunded" | "expired";
+      boarding_status: "not_checked_in" | "checked_in" | "boarded" | "no_show";
+      payment_provider: "paystack" | "flutterwave";
+      payment_status: "initialized" | "pending" | "success" | "failed" | "abandoned";
+      ledger_entry_type:
+        | "booking_gross"
+        | "platform_commission"
+        | "vendor_net"
+        | "provider_fee"
+        | "refund"
+        | "reversal"
+        | "adjustment";
+      commission_basis: "base_fare" | "fare_plus_fees";
       vehicle_status: "active" | "inactive" | "maintenance";
       vendor_role:
         | "vendor_owner"
@@ -452,4 +717,6 @@ export type VendorStatus = Database["public"]["Enums"]["vendor_status"];
 export type SeatType = Database["public"]["Enums"]["seat_type"];
 export type VehicleStatus = Database["public"]["Enums"]["vehicle_status"];
 export type ScheduleStatus = Database["public"]["Enums"]["schedule_status"];
+export type BookingStatus = Database["public"]["Enums"]["booking_status"];
+export type PaymentProvider = Database["public"]["Enums"]["payment_provider"];
 export type SeatState = Database["public"]["Enums"]["seat_state"];

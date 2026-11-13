@@ -1,35 +1,46 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { getScheduleForBooking } from "@/features/booking/queries";
+import { CheckoutForm } from "@/components/booking/checkout-form";
+import { getAuthContext } from "@/lib/auth/context";
+import { formatKobo } from "@/lib/money";
+import { getScheduleForBooking, getSeatMap } from "@/features/booking/queries";
 
 export const metadata = { title: "Passenger details" };
 
-// Phase 4 placeholder — the full passenger + luggage + payment flow lands in Phase 5.
 export default async function PassengersPage({
   params,
 }: {
   params: Promise<{ scheduleId: string }>;
 }) {
   const { scheduleId } = await params;
+  const ctx = await getAuthContext();
+  if (!ctx) redirect(`/login?next=/book/${scheduleId}/passengers`);
+
   const schedule = await getScheduleForBooking(scheduleId);
+  if (!schedule || schedule.status !== "published") notFound();
+  const seats = await getSeatMap(scheduleId);
 
   return (
-    <main className="mx-auto max-w-lg space-y-4 px-4 py-10 sm:px-6">
-      <h1 className="text-foreground text-xl font-semibold">Seats held</h1>
+    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:px-6">
+      <Link href={`/book/${scheduleId}`} className="text-muted hover:text-foreground text-sm">
+        ← Back to seats
+      </Link>
+      <div>
+        <h1 className="text-foreground text-xl font-semibold">Passenger details</h1>
+        <p className="text-muted text-sm">
+          {schedule.origin?.name} → {schedule.destination?.name} · {schedule.vendors?.name} ·{" "}
+          {schedule.base_fare_kobo ? `${formatKobo(schedule.base_fare_kobo)} per seat` : ""}
+        </p>
+      </div>
       <Card>
-        <CardContent className="text-muted space-y-2 text-sm">
-          <p>
-            Your seats for{" "}
-            <span className="text-foreground font-medium">
-              {schedule?.origin?.name} → {schedule?.destination?.name}
-            </span>{" "}
-            are held for 10 minutes.
-          </p>
-          <p>Passenger details, luggage declaration and payment are the next step (Phase 5).</p>
-          <Link href={`/book/${scheduleId}`} className="text-primary inline-block font-medium">
-            ← Back to seat selection
-          </Link>
+        <CardContent>
+          <CheckoutForm
+            scheduleId={scheduleId}
+            seats={seats}
+            fareKobo={schedule.base_fare_kobo ?? 0}
+          />
         </CardContent>
       </Card>
     </main>

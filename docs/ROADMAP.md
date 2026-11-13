@@ -81,14 +81,18 @@ Legend: ☑ done · ☐ todo
   expiry reconcile, search.
 - ☑ App: `/search` (form + results), `/book/[id]` (seat map + hold)
 
-## Phase 5 — Booking & payments
+## Phase 5 — Booking & payments ✅ (live, end-to-end verified)
 
-- ☐ Passenger details + per-passenger luggage declaration + server-side pricing
-- ☐ Booking state machine; Paystack + Flutterwave behind a provider interface
-- ☐ Signed, idempotent webhooks; verified-payment confirmation; commission ledger
-- ☐ Server-generated PDF tickets (per passenger) + QR verify + email delivery
-- ☐ "My Bookings / Tickets" customer area; resend; revoke on cancel/refund
-- ☐ Tests: only verified payment confirms; duplicate webhooks don't double-post
+- ☑ Bookings/passengers/payments/ledger/tickets schema + RLS; applied live
+- ☑ `create_booking_from_hold()` (server-priced), `confirm_payment()`
+  (idempotent, amount-checked, writes ledger + tickets), `cancel_booking()`
+- ☑ Paystack + Flutterwave init + webhook signature verification; webhook route
+  confirms only on a verified signed event
+- ☑ Checkout, My Bookings, booking detail, per-passenger QR e-tickets +
+  server-generated PDF (pdf-lib), cancel/revoke
+- ☑ Tests: `tests/db/phase5_bookings.sql` (15/15) + `tests/unit/payments.test.ts`
+  (6); live smoke of the full search→…→paid-ticket flow (demo data removed)
+- ☐ Luggage pricing in checkout (Phase 6); email/SMS/WhatsApp delivery (Phase 7)
 
 ## Phase 6 — Luggage & terminal ops
 

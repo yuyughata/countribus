@@ -5,7 +5,12 @@ import { loginAction } from "@/features/auth/actions";
 
 export const metadata = { title: "Sign in" };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
   return (
     <div className="space-y-5">
       <div>
@@ -15,6 +20,7 @@ export default function LoginPage() {
       <AuthForm
         action={loginAction}
         submitLabel="Sign in"
+        hidden={next ? { next } : undefined}
         fields={[
           { name: "email", label: "Email", type: "email", autoComplete: "email" },
           {

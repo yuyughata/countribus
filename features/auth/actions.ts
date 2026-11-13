@@ -31,7 +31,7 @@ export async function registerAction(
   });
   if (error) return { ok: false, error: error.message };
 
-  redirect("/dashboard");
+  redirect(safeNext(formData.get("next")));
 }
 
 export async function loginAction(
@@ -50,7 +50,13 @@ export async function loginAction(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { ok: false, error: "Invalid email or password" };
 
-  redirect("/dashboard");
+  redirect(safeNext(formData.get("next")));
+}
+
+/** Only allow same-origin relative redirects. */
+function safeNext(next: FormDataEntryValue | null): string {
+  if (typeof next === "string" && next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/dashboard";
 }
 
 export async function logoutAction(): Promise<void> {

@@ -30,3 +30,19 @@ export async function releaseHold(scheduleId: string, holdToken: string): Promis
   const supabase = await createClient();
   await supabase.rpc("release_hold", { p_schedule: scheduleId, p_hold_token: holdToken });
 }
+
+export async function cancelMyBooking(
+  bookingId: string,
+  reference: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_booking", {
+    p_booking: bookingId,
+    p_reason: "cancelled by customer",
+  });
+  if (error) return { ok: false, error: error.message };
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath(`/bookings/${reference}`);
+  revalidatePath("/bookings");
+  return { ok: true };
+}
