@@ -46,13 +46,17 @@ Legend: ☑ done · ☐ todo
 
 - RLS; onboarding→approval flow works end-to-end against the live project.
 
-## Phase 2 — Locations & fleet
+## Phase 2 — Locations & fleet ✅ (live)
 
-- ☐ Seed 36 states + FCT, cities, terminals, aliases; terminal search
-- ☐ `vehicle_categories`, `vehicles`, `seat_templates`, `seat_template_seats` migrations + RLS
-- ☐ Seat-layout editor (rows/cols, seat types, sellable flags) + versioning
-- ☐ Vehicle CRUD restricted to super_admin / vendor_owner / vendor_manager
-- ☐ Tests: only permitted roles manage vehicles; template versioning; layout validation
+- ☑ Seeded 36 states + FCT, 15 major cities + terminals, aliases table + RLS
+- ☑ `vehicle_categories` (seeded), `vehicles`, `seat_templates`,
+  `seat_template_seats` + RLS; applied live
+- ☑ Seat-layout editor (grid, seat types, sellable, publish-freeze) + versioning
+- ☑ Vehicle + seat-template management restricted to super_admin /
+  vendor_owner / vendor_manager (RLS + server `can()`)
+- ☑ Tests: `tests/db/phase2_rls.sql` (9/9) — owner/manager can manage, booking
+  officer & terminal staff cannot, cross-vendor blocked, published template
+  frozen, anon reads reference data
 
 ## Phase 3 — Routes & schedules
 

@@ -24,8 +24,8 @@ type NavItem = { href: string; label: string; icon: React.ComponentType<{ classN
 
 const primaryNav: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/trips", label: "Trip management", icon: Bus },
   { href: "/dashboard/vendors", label: "Vendor management", icon: Users },
+  { href: "/dashboard/fleet", label: "Fleet", icon: Bus },
   { href: "/dashboard/routes", label: "Route management", icon: MapPin },
   { href: "/dashboard/schedules", label: "Schedules", icon: CalendarClock },
   { href: "/dashboard/finance", label: "Financials", icon: Wallet },

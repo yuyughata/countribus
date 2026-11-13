@@ -47,3 +47,15 @@ export function canPlatform(ctx: AuthContext, capability: Capability): boolean {
 export function hasVendorAccess(ctx: AuthContext, vendorId: string): boolean {
   return ctx.isPlatformAdmin || ctx.memberships.some((m) => m.vendorId === vendorId);
 }
+
+/** Vendor ids the user can manage fleet/schedules for (owner or manager). */
+export function manageableVendorIds(ctx: AuthContext): string[] {
+  return ctx.memberships
+    .filter((m) => m.role === "vendor_owner" || m.role === "vendor_manager")
+    .map((m) => m.vendorId);
+}
+
+/** The user's first manageable vendor, or null (used to scope vendor consoles). */
+export function firstManageableVendorId(ctx: AuthContext): string | null {
+  return manageableVendorIds(ctx)[0] ?? null;
+}

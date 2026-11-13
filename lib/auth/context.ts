@@ -5,7 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import type { AuthContext } from "@/lib/auth/access";
 
 export type { AuthContext, VendorMembership } from "@/lib/auth/access";
-export { roleForVendor, canForVendor, canPlatform, hasVendorAccess } from "@/lib/auth/access";
+export {
+  roleForVendor,
+  canForVendor,
+  canPlatform,
+  hasVendorAccess,
+  manageableVendorIds,
+  firstManageableVendorId,
+} from "@/lib/auth/access";
 
 export class AuthError extends Error {
   constructor(
