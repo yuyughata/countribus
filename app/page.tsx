@@ -32,9 +32,11 @@ export default function Home() {
           tickets — one marketplace, every verified operator.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button size="md" className="gap-2">
-            Search journeys <ArrowRight className="size-4" />
-          </Button>
+          <Link href="/search">
+            <Button size="md" className="gap-2">
+              Search journeys <ArrowRight className="size-4" />
+            </Button>
+          </Link>
           <Link href="/dashboard">
             <Button variant="outline" size="md">
               View dashboard

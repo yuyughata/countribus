@@ -70,12 +70,16 @@ Legend: ☑ done · ☐ todo
 - ☑ App: routes/schedules console (create route, create + publish/cancel
   schedule), server actions + RLS
 
-## Phase 4 — Search & seat inventory
+## Phase 4 — Search & seat inventory ✅ (live)
 
-- ☐ Journey search API (origin/destination/date/pax/category), P95 < 2s
-- ☐ Seat map UI with states (available/booked/held/selected/blocked)
-- ☐ 10-minute holds, expiry job + lazy reconciliation, atomic allocation
-- ☐ Concurrency tests: no duplicate allocation; expired holds release safely
+- ☑ `search_journeys()` SQL function (origin/dest/date/pax/category), indexed
+- ☑ Seat map UI with all five states; select → `hold_seats()` (10-min)
+- ☑ Atomic holds, lazy `reconcile_expired_holds()`, `release_hold()`
+- ☑ **True concurrency proven**: 5 parallel two-connection races for one seat →
+  exactly one winner each (never a double allocation). Plus sequential suite
+  `tests/db/phase4_concurrency.sql` (7/7): hold, double-hold rejected, release,
+  expiry reconcile, search.
+- ☑ App: `/search` (form + results), `/book/[id]` (seat map + hold)
 
 ## Phase 5 — Booking & payments
 

@@ -396,6 +396,37 @@ export type Database = {
       schedule_vendor: { Args: { p_schedule: string }; Returns: string };
       schedule_public: { Args: { p_schedule: string }; Returns: boolean };
       publish_schedule: { Args: { p_schedule: string }; Returns: undefined };
+      reconcile_expired_holds: { Args: { p_schedule: string }; Returns: number };
+      hold_seats: {
+        Args: {
+          p_schedule: string;
+          p_seat_ids: string[];
+          p_hold_token: string;
+          p_minutes?: number;
+        };
+        Returns: string;
+      };
+      release_hold: { Args: { p_schedule: string; p_hold_token: string }; Returns: undefined };
+      search_journeys: {
+        Args: {
+          p_origin: string;
+          p_dest: string;
+          p_date: string;
+          p_pax?: number;
+          p_category?: string;
+        };
+        Returns: {
+          schedule_id: string;
+          vendor_name: string;
+          origin_name: string;
+          destination_name: string;
+          departure_at: string;
+          arrival_estimate_at: string | null;
+          base_fare_kobo: number | null;
+          category_key: string | null;
+          available_seats: number;
+        }[];
+      };
     };
     Enums: {
       seat_type: "standard" | "window" | "aisle" | "driver" | "blocked";
