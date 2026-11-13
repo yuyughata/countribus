@@ -109,12 +109,24 @@ Legend: ☑ done · ☐ todo
   the editor; surcharge snapshots into inventory and flows into booking price
 - ☐ Lockable final manifest snapshot + per-terminal shift scoping (refinements)
 
-## Phase 7 — Dashboards & communications
+## Phase 7 — Dashboards & communications ✅ (live)
 
-- ☐ Admin + vendor dashboards (KPIs, analytics, right rail) with real charts
-- ☐ Date-range filters drive all metrics; vendor data scoped to tenant
-- ☐ Email/SMS/WhatsApp notifications + daily summaries; delivery logs + retries
-- ☐ PWA polish (offline shell, install)
+- ☑ Admin + vendor dashboards wired to real data: `admin_dashboard_metrics()`,
+  `vendor_dashboard_metrics()`, `admin_revenue_by_month()` (SECURITY DEFINER,
+  internally guarded by `is_platform_admin()` / `has_vendor_role()`); KPIs,
+  revenue chart, pending-approvals + recent-activity right rail
+- ☑ Tenant scoping: `dashboardMode(ctx)` routes super-admin → platform view,
+  vendor roles → their own vendor metrics, everyone else → onboarding prompt
+- ☑ Notifications module (`lib/notifications/`): `notifications` +
+  `notification_preferences` tables (RLS: own rows or admin), templated
+  booking-confirmation email, pluggable email transport
+- ☑ Email-on-payment hook: the verified payment webhook queues the
+  confirmation email on first `confirmed` only; best-effort (never fails the
+  webhook), every attempt persisted with terminal status (sent/skipped/failed)
+- ☑ Graceful no-provider mode: when `RESEND_API_KEY`/`NOTIFICATIONS_FROM_EMAIL`
+  are unset, sends are recorded `skipped` for later backfill, not `failed`
+- ☑ PWA baseline shipped earlier (`/manifest.webmanifest`, installable shell)
+- ☐ SMS/WhatsApp channels + scheduled daily summaries + delivery retries (later)
 
 ## Phase 8 — Hardening & launch
 
@@ -122,5 +134,6 @@ Legend: ☑ done · ☐ todo
 - ☐ Backup/restore, monitoring, incident runbook; UAT; provider production checks
 - ☐ Pilot with vetted vendors + limited routes; load-test seat contention
 
-**Immediate next task:** once the Supabase connector is restored, link the
-`countribus` project, then author Phase 1 migrations from `DATABASE_SCHEMA.md`.
+**Immediate next task:** Phase 8 — security review (document the expected
+SECURITY DEFINER / deny-all-RLS lints), performance, accessibility pass,
+backup/restore + monitoring runbook, then pilot.

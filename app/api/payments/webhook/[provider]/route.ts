@@ -8,6 +8,7 @@ import {
   type WebhookVerification,
 } from "@/lib/payments/providers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyBookingConfirmed } from "@/lib/notifications/queue";
 
 /**
  * Provider webhook. A booking is confirmed ONLY here, after the signature is
@@ -56,6 +57,19 @@ export async function POST(
     p_amount_kobo: v.amountKobo,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // On first-time confirmation, queue the booking-confirmation email. This is
+  // best-effort and never fails the webhook (the payment is already recorded);
+  // duplicate/idempotent events return other statuses and are not re-notified.
+  if (data === "confirmed" && v.reference) {
+    const { data: tx } = await admin
+      .from("payment_transactions")
+      .select("booking_id")
+      .eq("provider", provider)
+      .eq("provider_reference", v.reference)
+      .maybeSingle();
+    if (tx?.booking_id) await notifyBookingConfirmed(admin, tx.booking_id);
+  }
 
   // TODO(prod hardening): independently GET the provider's verify endpoint
   // before confirming, in addition to the signed webhook + amount re-check.

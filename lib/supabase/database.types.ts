@@ -593,6 +593,83 @@ export type Database = {
           },
         ];
       };
+      notification_preferences: {
+        Row: {
+          email: boolean;
+          sms: boolean;
+          updated_at: string;
+          user_id: string;
+          whatsapp: boolean;
+        };
+        Insert: {
+          email?: boolean;
+          sms?: boolean;
+          updated_at?: string;
+          user_id: string;
+          whatsapp?: boolean;
+        };
+        Update: {
+          email?: boolean;
+          sms?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          whatsapp?: boolean;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          booking_id: string | null;
+          channel: string;
+          created_at: string;
+          error: string | null;
+          id: string;
+          payload: Json;
+          provider_message_id: string | null;
+          recipient: string | null;
+          sent_at: string | null;
+          status: string;
+          template: string;
+          user_id: string | null;
+        };
+        Insert: {
+          booking_id?: string | null;
+          channel: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          payload?: Json;
+          provider_message_id?: string | null;
+          recipient?: string | null;
+          sent_at?: string | null;
+          status?: string;
+          template: string;
+          user_id?: string | null;
+        };
+        Update: {
+          booking_id?: string | null;
+          channel?: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          payload?: Json;
+          provider_message_id?: string | null;
+          recipient?: string | null;
+          sent_at?: string | null;
+          status?: string;
+          template?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_booking_id_fkey";
+            columns: ["booking_id"];
+            isOneToOne: false;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       passengers: {
         Row: {
           booking_id: string;
@@ -1441,6 +1518,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_dashboard_metrics: {
+        Args: { p_from?: string; p_to?: string };
+        Returns: Json;
+      };
+      admin_revenue_by_month: {
+        Args: never;
+        Returns: {
+          gross_kobo: number;
+          month: string;
+        }[];
+      };
       booking_passenger_vendor: { Args: { p_bp: string }; Returns: string };
       cancel_booking: {
         Args: { p_booking: string; p_reason?: string };
@@ -1536,6 +1624,10 @@ export type Database = {
         }[];
       };
       seat_template_vendor: { Args: { p_template: string }; Returns: string };
+      vendor_dashboard_metrics: {
+        Args: { p_from?: string; p_to?: string; p_vendor: string };
+        Returns: Json;
+      };
       verify_ticket: { Args: { p_qr_token: string }; Returns: Json };
     };
     Enums: {
