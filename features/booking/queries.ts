@@ -29,13 +29,14 @@ export type SeatCell = {
   seat_label: string;
   state: "available" | "booked" | "held" | "blocked";
   held_until: string | null;
+  surcharge_kobo: number;
 };
 
 export async function getSeatMap(scheduleId: string): Promise<SeatCell[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("schedule_seats")
-    .select("seat_id, seat_label, state, held_until")
+    .select("seat_id, seat_label, state, held_until, surcharge_kobo")
     .eq("schedule_id", scheduleId)
     .order("seat_label");
   return (data ?? []) as SeatCell[];

@@ -9,7 +9,13 @@ import { formatKobo } from "@/lib/money";
 import type { SeatCell } from "@/features/booking/queries";
 import type { PaymentProvider } from "@/lib/supabase/database.types";
 
-type Hold = { token: string; seatIds: string[]; expiresAt: string };
+type Hold = {
+  token: string;
+  seatIds: string[];
+  surcharges?: Record<string, number>;
+  fareKobo?: number;
+  expiresAt: string;
+};
 
 const field =
   "h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none";
@@ -30,6 +36,7 @@ export function CheckoutForm({
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [provider, setProvider] = useState<PaymentProvider>("paystack");
   const [pax, setPax] = useState<Record<string, { full_name: string; phone: string }>>({});
+  const [bags, setBags] = useState<Record<string, number>>({});
 
   useEffect(() => {
     try {
@@ -53,7 +60,7 @@ export function CheckoutForm({
     );
   }
 
-  const total = hold.seatIds.length * fareKobo;
+  const total = hold.seatIds.reduce((s, id) => s + fareKobo + (hold.surcharges?.[id] ?? 0), 0);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +70,9 @@ export function CheckoutForm({
       full_name: pax[seat_id]?.full_name ?? "",
       phone: pax[seat_id]?.phone ?? "",
     }));
+    const luggage = hold!.seatIds
+      .map((seat_id) => ({ seat_id, type: "medium_bag", quantity: bags[seat_id] ?? 0 }))
+      .filter((l) => l.quantity > 0);
     start(async () => {
       const r = await createBookingAndPay({
         scheduleId,
@@ -70,6 +80,7 @@ export function CheckoutForm({
         provider,
         contact: { name: contact.name, phone: contact.phone, email: contact.email || undefined },
         passengers,
+        luggage,
       });
       if (!r.ok) {
         setError(r.error);
@@ -118,7 +129,7 @@ export function CheckoutForm({
       <section className="space-y-3">
         <h3 className="text-foreground text-sm font-semibold">Passengers</h3>
         {hold.seatIds.map((id) => (
-          <div key={id} className="grid gap-3 sm:grid-cols-[70px_1fr_1fr] sm:items-center">
+          <div key={id} className="grid gap-3 sm:grid-cols-[64px_1fr_1fr_90px] sm:items-center">
             <span className="bg-primary-soft text-primary inline-flex h-10 items-center justify-center rounded-md text-sm font-medium">
               {labelFor(id)}
             </span>
@@ -145,8 +156,21 @@ export function CheckoutForm({
                 })
               }
             />
+            <input
+              className={field}
+              type="number"
+              min={0}
+              max={10}
+              title="Checked bags"
+              placeholder="Bags"
+              value={bags[id] ?? 0}
+              onChange={(e) => setBags({ ...bags, [id]: Math.max(0, Number(e.target.value) || 0) })}
+            />
           </div>
         ))}
+        <p className="text-subtle text-xs">
+          First bag per passenger is free; extra bags are charged per the operator&apos;s policy.
+        </p>
       </section>
 
       <section className="flex flex-wrap items-end justify-between gap-3">

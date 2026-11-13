@@ -14,8 +14,20 @@ export const seatSchema = z.object({
   seatLabel: z.string().min(1).max(8),
   row: z.number().int().min(1),
   col: z.number().int().min(1),
-  seatType: z.enum(["standard", "window", "aisle", "driver", "blocked"]),
+  seatType: z.enum([
+    "standard",
+    "window",
+    "aisle",
+    "driver",
+    "blocked",
+    "wc",
+    "entrance",
+    "amenity",
+    "empty",
+  ]),
   isSellable: z.boolean(),
+  seatClass: z.string().min(1).max(20).default("standard"),
+  surchargeKobo: z.number().int().min(0).max(100_000_00).default(0),
 });
 
 export const seatTemplateSchema = z.object({

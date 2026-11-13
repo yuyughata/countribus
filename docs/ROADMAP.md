@@ -94,13 +94,20 @@ Legend: ☑ done · ☐ todo
   (6); live smoke of the full search→…→paid-ticket flow (demo data removed)
 - ☐ Luggage pricing in checkout (Phase 6); email/SMS/WhatsApp delivery (Phase 7)
 
-## Phase 6 — Luggage & terminal ops
+## Phase 6 — Luggage & terminal ops ✅ (live)
 
-- ☐ Luggage fees/limits/prohibited policy; QR luggage tags; scan events
-- ☐ Boarding: ticket QR verify, check-in/boarded; passenger/luggage manifests (PDF/CSV)
-- ☐ Vendor departure-manifest area (per schedule) + lockable snapshot + audit
-- ☐ Terminal-scoped access; read-only offline manifest download
-- ☐ Tests: manifest reconciles with bookings; staff scope enforced; per-date separation
+- ☑ Luggage policies, per-passenger declaration + fees in checkout, QR luggage
+  tags, scan events; boarding_events
+- ☑ `verify_ticket()` (public) + `/verify/[token]` page; `record_boarding()`,
+  `record_luggage_event()` with terminal/luggage-officer scope
+- ☑ Vendor departure manifests (`/dashboard/manifests`) with passenger + luggage
+  columns, boarding controls, **CSV export** (per-departure)
+- ☑ Tests: `tests/db/phase6_luggage_boarding.sql` (8/8) — per-passenger luggage
+  fee, ticket verify valid/invalid, boarding authz scope, manifest reconciliation
+- ☑ **Seat configuration upgrade** (from the supplied reference): fixture cells
+  (Driver/W-C/Entrance/Tea-Coffee/Empty), seat classes + per-seat surcharges in
+  the editor; surcharge snapshots into inventory and flows into booking price
+- ☐ Lockable final manifest snapshot + per-terminal shift scoping (refinements)
 
 ## Phase 7 — Dashboards & communications
 

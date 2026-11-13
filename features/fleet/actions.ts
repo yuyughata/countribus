@@ -102,6 +102,8 @@ export async function saveSeatTemplate(
       col: s.col,
       seat_type: s.seatType,
       is_sellable: s.isSellable,
+      seat_class: s.seatClass,
+      surcharge_kobo: s.surchargeKobo,
     })),
   );
   if (seatErr) return { ok: false, error: seatErr.message };

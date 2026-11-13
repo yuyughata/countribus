@@ -60,6 +60,8 @@ export function SeatMap({
     return [...byRow.entries()].sort((a, b) => a[0] - b[0]).map(([, v]) => v);
   }, [seats]);
 
+  const seatById = useMemo(() => new Map(seats.map((s) => [s.seat_id, s])), [seats]);
+
   function toggle(s: SeatCell) {
     const eff = effState(s, selected);
     if (eff !== "available" && eff !== "selected") return;
@@ -75,20 +77,18 @@ export function SeatMap({
     setError(null);
     const ids = [...selected];
     if (ids.length === 0) return;
-    const token =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}`;
+    const token = crypto.randomUUID();
     start(async () => {
       const r = await holdSeats(scheduleId, ids, token);
       if (!r.ok) {
         setError(r.error);
         router.refresh();
       } else {
+        const surcharges = Object.fromEntries(ids.map((id) => [id, surchargeById(id)]));
         try {
           sessionStorage.setItem(
             `hold:${scheduleId}`,
-            JSON.stringify({ token, seatIds: ids, expiresAt: r.expiresAt }),
+            JSON.stringify({ token, seatIds: ids, surcharges, fareKobo, expiresAt: r.expiresAt }),
           );
         } catch {}
         router.push(`/book/${scheduleId}/passengers?token=${token}`);
@@ -96,7 +96,8 @@ export function SeatMap({
     });
   }
 
-  const total = selected.size * fareKobo;
+  const surchargeById = (id: string) => seatById.get(id)?.surcharge_kobo ?? 0;
+  const total = [...selected].reduce((sum, id) => sum + fareKobo + surchargeById(id), 0);
 
   return (
     <div className="space-y-5">

@@ -5,29 +5,41 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { saveSeatTemplate } from "@/features/fleet/actions";
+import { formatKobo, nairaToKobo } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
-type SeatType = "standard" | "window" | "aisle" | "driver" | "blocked";
+type Tool =
+  "standard" | "comfort" | "panorama" | "empty" | "driver" | "wc" | "entrance" | "amenity";
 
-const CYCLE: SeatType[] = ["standard", "window", "aisle", "driver", "blocked"];
-const SELLABLE: Record<SeatType, boolean> = {
-  standard: true,
-  window: true,
-  aisle: true,
-  driver: false,
-  blocked: false,
-};
-const SEAT_STYLE: Record<SeatType, string> = {
+const TOOLS: { key: Tool; label: string }[] = [
+  { key: "standard", label: "Seat" },
+  { key: "comfort", label: "Comfort" },
+  { key: "panorama", label: "Panorama" },
+  { key: "empty", label: "Empty" },
+  { key: "driver", label: "Driver" },
+  { key: "wc", label: "W/C" },
+  { key: "entrance", label: "Entrance" },
+  { key: "amenity", label: "Tea/Coffee" },
+];
+
+const TOOL_STYLE: Record<Tool, string> = {
   standard: "bg-surface border-border-strong text-foreground",
-  window: "bg-info-soft border-info text-info",
-  aisle: "bg-violet-soft border-violet text-violet",
+  comfort: "bg-info-soft border-info text-info",
+  panorama: "bg-violet-soft border-violet text-violet",
+  empty: "bg-canvas border-dashed border-border text-subtle",
   driver: "bg-warning-soft border-warning text-warning",
-  blocked: "bg-surface-muted border-border text-subtle line-through",
+  wc: "bg-teal-soft border-teal text-teal",
+  entrance: "bg-success-soft border-success text-success",
+  amenity: "bg-primary-soft border-primary text-primary",
 };
-
-function label(r: number, c: number) {
-  return `${r}${String.fromCharCode(64 + c)}`;
-}
+const FIXTURE_ABBR: Partial<Record<Tool, string>> = {
+  driver: "D",
+  wc: "WC",
+  entrance: "EN",
+  amenity: "☕",
+  empty: "",
+};
+const isSeatTool = (t: Tool) => t === "standard" || t === "comfort" || t === "panorama";
 
 export function SeatLayoutEditor({
   vendorId,
@@ -42,37 +54,59 @@ export function SeatLayoutEditor({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("Standard layout");
-  const [rows, setRows] = useState(8);
+  const [rows, setRows] = useState(10);
   const [columns, setColumns] = useState(4);
-  // seatType per "r-c"
-  const [types, setTypes] = useState<Record<string, SeatType>>({});
+  const [tool, setTool] = useState<Tool>("standard");
+  const [comfortNaira, setComfortNaira] = useState("2000");
+  const [panoramaNaira, setPanoramaNaira] = useState("3000");
+  const [cells, setCells] = useState<Record<string, Tool>>({}); // default unpainted = standard seat
 
-  const grid = useMemo(() => {
-    const out: { r: number; c: number; key: string; type: SeatType }[] = [];
+  const cellTool = (r: number, c: number): Tool => cells[`${r}-${c}`] ?? "standard";
+
+  const stats = useMemo(() => {
+    let seats = 0;
     for (let r = 1; r <= rows; r++)
-      for (let c = 1; c <= columns; c++) {
-        const key = `${r}-${c}`;
-        out.push({ r, c, key, type: types[key] ?? "standard" });
-      }
-    return out;
-  }, [rows, columns, types]);
+      for (let c = 1; c <= columns; c++) if (isSeatTool(cellTool(r, c))) seats++;
+    return { seats };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, columns, cells]);
 
-  const sellableCount = grid.filter((s) => SELLABLE[s.type]).length;
+  function paint(r: number, c: number) {
+    setCells((prev) => ({ ...prev, [`${r}-${c}`]: tool }));
+  }
 
-  function cycle(key: string, current: SeatType) {
-    const next = CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
-    setTypes((t) => ({ ...t, [key]: next }));
+  function surchargeFor(t: Tool): number {
+    if (t === "comfort") return nairaToKobo(Number(comfortNaira) || 0);
+    if (t === "panorama") return nairaToKobo(Number(panoramaNaira) || 0);
+    return 0;
   }
 
   function save() {
     setError(null);
-    const seats = grid.map((s) => ({
-      seatLabel: label(s.r, s.c),
-      row: s.r,
-      col: s.c,
-      seatType: s.type,
-      isSellable: SELLABLE[s.type],
-    }));
+    const seats: {
+      seatLabel: string;
+      row: number;
+      col: number;
+      seatType: "standard" | "driver" | "wc" | "entrance" | "amenity" | "empty";
+      isSellable: boolean;
+      seatClass: string;
+      surchargeKobo: number;
+    }[] = [];
+    for (let r = 1; r <= rows; r++)
+      for (let c = 1; c <= columns; c++) {
+        const t = cellTool(r, c);
+        if (t === "empty") continue;
+        const seat = isSeatTool(t);
+        seats.push({
+          seatLabel: seat ? `${r}${String.fromCharCode(64 + c)}` : `${t[0].toUpperCase()}${r}-${c}`,
+          row: r,
+          col: c,
+          seatType: seat ? "standard" : (t as "driver" | "wc" | "entrance" | "amenity"),
+          isSellable: seat,
+          seatClass: seat ? t : "fixture",
+          surchargeKobo: seat ? surchargeFor(t) : 0,
+        });
+      }
     start(async () => {
       const r = await saveSeatTemplate({ vendorId, vehicleId, name, rows, columns, seats });
       if (!r.ok) setError(r.error);
@@ -85,11 +119,11 @@ export function SeatLayoutEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end gap-4">
+      <div className="flex flex-wrap items-end gap-3">
         <label className="text-muted space-y-1 text-xs font-medium">
           Layout name
           <input
-            className="border-border bg-surface focus-visible:border-primary h-9 w-56 rounded-md border px-2 text-sm focus-visible:outline-none"
+            className={cn(num, "w-48")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -111,45 +145,88 @@ export function SeatLayoutEditor({
             className={num}
             type="number"
             min={1}
-            max={10}
+            max={8}
             value={columns}
-            onChange={(e) => setColumns(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
+            onChange={(e) => setColumns(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
           />
         </label>
-        <span className="text-muted text-sm">
-          {sellableCount} sellable seat{sellableCount === 1 ? "" : "s"}
-        </span>
+        <label className="text-muted space-y-1 text-xs font-medium">
+          Comfort +₦
+          <input
+            className={num}
+            type="number"
+            min={0}
+            value={comfortNaira}
+            onChange={(e) => setComfortNaira(e.target.value)}
+          />
+        </label>
+        <label className="text-muted space-y-1 text-xs font-medium">
+          Panorama +₦
+          <input
+            className={num}
+            type="number"
+            min={0}
+            value={panoramaNaira}
+            onChange={(e) => setPanoramaNaira(e.target.value)}
+          />
+        </label>
       </div>
 
-      <p className="text-subtle text-xs">
-        Click a seat to cycle: standard → window → aisle → driver → blocked. Driver and blocked
-        seats are not sold.
-      </p>
+      <div>
+        <p className="text-muted mb-2 text-xs font-medium">
+          Palette — pick a tool, then click cells
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {TOOLS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTool(t.key)}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-xs font-medium",
+                TOOL_STYLE[t.key],
+                tool === t.key && "ring-primary ring-2 ring-offset-1",
+              )}
+            >
+              {t.label}
+              {t.key === "comfort" && ` +${formatKobo(surchargeFor("comfort"))}`}
+              {t.key === "panorama" && ` +${formatKobo(surchargeFor("panorama"))}`}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <div
-        className="border-border bg-canvas inline-grid gap-1.5 rounded-lg border p-4"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}
-      >
-        {grid.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => cycle(s.key, s.type)}
-            title={s.type}
-            className={cn(
-              "flex size-11 items-center justify-center rounded-md border text-xs font-medium transition-colors",
-              SEAT_STYLE[s.type],
-            )}
-          >
-            {label(s.r, s.c)}
-          </button>
+      <div className="border-border bg-canvas inline-block space-y-2 rounded-lg border p-4">
+        <p className="text-subtle mb-1 text-center text-[11px] tracking-wide">FRONT</p>
+        {Array.from({ length: rows }, (_, ri) => ri + 1).map((r) => (
+          <div key={r} className="flex justify-center gap-1.5">
+            {Array.from({ length: columns }, (_, ci) => ci + 1).map((c) => {
+              const t = cellTool(r, c);
+              const seat = isSeatTool(t);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => paint(r, c)}
+                  title={t}
+                  className={cn(
+                    "flex size-10 items-center justify-center rounded-md border text-[11px] font-medium",
+                    TOOL_STYLE[t],
+                  )}
+                >
+                  {seat ? `${r}${String.fromCharCode(64 + c)}` : (FIXTURE_ABBR[t] ?? "")}
+                </button>
+              );
+            })}
+          </div>
         ))}
       </div>
 
+      <p className="text-muted text-sm">{stats.seats} sellable seats</p>
       {error && <p className="text-danger text-sm">{error}</p>}
 
       <div className="flex gap-2">
-        <Button onClick={save} disabled={pending || sellableCount === 0}>
+        <Button onClick={save} disabled={pending || stats.seats === 0}>
           {pending ? "Saving…" : `Save & publish layout for ${vehicleName}`}
         </Button>
         <Button variant="outline" onClick={() => router.push("/dashboard/fleet")}>

@@ -13,6 +13,7 @@ export type CheckoutInput = {
   provider: PaymentProvider;
   contact: { name: string; phone: string; email?: string };
   passengers: { seat_id: string; full_name: string; phone?: string }[];
+  luggage?: { seat_id: string; type: string; quantity: number }[];
 };
 
 export type CheckoutResult =
@@ -47,6 +48,12 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
   if (error) return { ok: false, error: error.message };
   const booking = (data as { booking_id: string; reference: string }[])[0];
   if (!booking) return { ok: false, error: "Could not create booking" };
+
+  // Declare luggage (prices into the booking total) before reading the total.
+  const bags = (input.luggage ?? []).filter((l) => l.quantity > 0);
+  if (bags.length > 0) {
+    await supabase.rpc("declare_luggage", { p_booking: booking.booking_id, p_items: bags });
+  }
 
   const { data: bk } = await supabase
     .from("bookings")

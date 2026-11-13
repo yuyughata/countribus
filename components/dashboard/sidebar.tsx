@@ -30,7 +30,7 @@ const primaryNav: NavItem[] = [
   { href: "/dashboard/schedules", label: "Schedules", icon: CalendarClock },
   { href: "/dashboard/finance", label: "Financials", icon: Wallet },
   { href: "/dashboard/reports", label: "Analytics & reporting", icon: BarChart3 },
-  { href: "/dashboard/luggage", label: "Luggage & boarding", icon: Luggage },
+  { href: "/dashboard/manifests", label: "Boarding & manifests", icon: Luggage },
   { href: "/dashboard/security", label: "Security & compliance", icon: ShieldCheck },
 ];
 
