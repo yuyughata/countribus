@@ -187,3 +187,17 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   rule, so new paid bookings use the new rate while existing bookings are
   unchanged. The UI shows the live rate (read-only for operators). Verified
   end-to-end against the live project. Percentage → basis points (12.5% = 1250).
+
+## Delete vehicle/route + realistic seat map
+
+- **ADR-0021 Delete vehicle & route** — owner/manager/admin can delete a vehicle
+  or a route from the dashboard (`deleteVehicle`, `deleteRoute`; capability-
+  checked, RLS `for all`). Vehicle seat templates cascade; a vehicle/route still
+  referenced by schedules is blocked by the FK (restrict) and the action returns
+  a clear "in use" message instead of a raw error.
+- **ADR-0022 Bus-arrangement seat map** — the booking seat map renders seats at
+  their real row/column (column derived from the seat label letter) with a
+  centre aisle for 3+-across layouts, a FRONT/driver/door header, and a seat-icon
+  glyph per seat coloured by state. No schema change: column position is encoded
+  in the existing seat labels. A sample 2+2 coach departure was seeded for the
+  demo operator so the flow is bookable.

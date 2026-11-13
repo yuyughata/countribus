@@ -5,6 +5,7 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DashboardHeader } from "@/components/dashboard/page-header";
+import { DeleteButton } from "@/components/dashboard/delete-button";
 import { requireDashboardCapability } from "@/lib/auth/guard";
 import { listRoutes } from "@/features/schedules/queries";
 
@@ -51,12 +52,15 @@ export default async function RoutesPage() {
                   {r.origin?.name} → {r.destination?.name}
                 </p>
               </div>
-              <Link
-                href="/dashboard/schedules"
-                className="text-primary shrink-0 text-xs font-medium"
-              >
-                Schedule a departure
-              </Link>
+              <div className="flex shrink-0 items-center gap-3">
+                <Link
+                  href="/dashboard/schedules"
+                  className="text-primary text-xs font-medium"
+                >
+                  Schedule a departure
+                </Link>
+                <DeleteButton kind="route" id={r.id} name={r.name} />
+              </div>
             </div>
           ))}
         </Card>

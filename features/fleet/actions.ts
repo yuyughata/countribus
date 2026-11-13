@@ -42,6 +42,38 @@ export async function createVehicle(input: unknown): Promise<FleetResult<{ vehic
   return { ok: true, data: { vehicleId: data.id } };
 }
 
+/**
+ * Delete a vehicle (owner/manager/admin). Its seat templates cascade away. If
+ * the vehicle is still referenced by schedules (FK restrict), the delete is
+ * blocked and we return a clear message rather than a raw DB error.
+ */
+export async function deleteVehicle(vehicleId: string): Promise<FleetResult> {
+  const ctx = await requireUser();
+  const supabase = await createClient();
+  const { data: vehicle } = await supabase
+    .from("vehicles")
+    .select("vendor_id")
+    .eq("id", vehicleId)
+    .maybeSingle();
+  if (!vehicle) return { ok: false, error: "Vehicle not found" };
+  if (!canForVendor(ctx, vehicle.vendor_id, "vehicle:manage")) {
+    return { ok: false, error: "Not allowed" };
+  }
+  const { error } = await supabase.from("vehicles").delete().eq("id", vehicleId);
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        ok: false,
+        error:
+          "This vehicle is used by one or more schedules. Cancel those departures first, or set the vehicle to inactive.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/dashboard/fleet");
+  return { ok: true, data: undefined };
+}
+
 export async function setVehicleStatus(
   vehicleId: string,
   status: VehicleStatus,

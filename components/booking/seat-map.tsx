@@ -11,17 +11,43 @@ import type { SeatCell } from "@/features/booking/queries";
 
 type Eff = "available" | "booked" | "held" | "blocked" | "selected";
 
-const LEGEND: { key: Eff; label: string; cls: string }[] = [
-  { key: "available", label: "Available", cls: "bg-success-soft border-success text-success" },
-  { key: "selected", label: "Selected", cls: "bg-info text-white border-info" },
-  { key: "held", label: "Held", cls: "bg-warning-soft border-warning text-warning" },
-  { key: "booked", label: "Booked", cls: "bg-danger-soft border-danger text-danger" },
-  { key: "blocked", label: "Blocked", cls: "bg-surface-muted border-border text-subtle" },
+const LEGEND: { key: Eff; label: string }[] = [
+  { key: "available", label: "Available" },
+  { key: "selected", label: "Selected" },
+  { key: "held", label: "On hold" },
+  { key: "booked", label: "Taken" },
 ];
-const CLS: Record<Eff, string> = Object.fromEntries(LEGEND.map((l) => [l.key, l.cls])) as Record<
-  Eff,
-  string
->;
+
+/** Per-state seat styling (frame colour + whether it's selectable). */
+const SEAT_STYLE: Record<Eff, { color: string; solid: boolean; clickable: boolean }> = {
+  available: { color: "var(--color-seat-available)", solid: false, clickable: true },
+  selected: { color: "var(--color-seat-selected)", solid: true, clickable: true },
+  held: { color: "var(--color-seat-held)", solid: false, clickable: false },
+  booked: { color: "var(--color-seat-booked)", solid: false, clickable: false },
+  blocked: { color: "var(--color-seat-blocked)", solid: false, clickable: false },
+};
+
+function SeatGlyph({ solid }: { solid: boolean }) {
+  return (
+    <svg viewBox="0 0 40 40" className="absolute inset-0 size-full" aria-hidden="true">
+      {/* backrest */}
+      <rect x="7" y="5" width="26" height="9" rx="3.5" fill="currentColor" />
+      {/* armrests */}
+      <rect x="3.5" y="12" width="6" height="24" rx="3" fill="currentColor" />
+      <rect x="30.5" y="12" width="6" height="24" rx="3" fill="currentColor" />
+      {/* cushion */}
+      <rect
+        x="9"
+        y="15"
+        width="22"
+        height="21"
+        rx="4.5"
+        fill={solid ? "currentColor" : "#ffffff"}
+        opacity={solid ? 1 : 0.82}
+      />
+    </svg>
+  );
+}
 
 function effState(s: SeatCell, selected: Set<string>): Eff {
   if (selected.has(s.seat_id)) return "selected";
@@ -29,9 +55,14 @@ function effState(s: SeatCell, selected: Set<string>): Eff {
   return s.state;
 }
 
-function parse(label: string) {
-  const m = label.match(/^(\d+)(.*)$/);
-  return { row: m ? parseInt(m[1], 10) : 0, col: m ? m[2] : label };
+/** "10C" -> { row: 10, col: 3 } (col letter A=1, B=2, …). */
+function parse(label: string): { row: number; col: number } {
+  const m = label.match(/^(\d+)\s*([A-Za-z]*)$/);
+  const row = m ? parseInt(m[1], 10) : 0;
+  const letters = m?.[2] ?? "";
+  let col = 0;
+  for (const ch of letters.toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { row, col: col || 1 };
 }
 
 export function SeatMap({
@@ -48,16 +79,26 @@ export function SeatMap({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const rows = useMemo(() => {
-    const byRow = new Map<number, SeatCell[]>();
-    for (const s of [...seats].sort((a, b) =>
-      a.seat_label.localeCompare(b.seat_label, undefined, { numeric: true }),
-    )) {
-      const { row } = parse(s.seat_label);
-      if (!byRow.has(row)) byRow.set(row, []);
-      byRow.get(row)!.push(s);
+  // Arrange seats by their real row/column so the map mirrors the bus layout.
+  const { grid, aisleAfter } = useMemo(() => {
+    const byPos = new Map<string, SeatCell>();
+    let maxRow = 0;
+    let maxCol = 0;
+    for (const s of seats) {
+      const { row, col } = parse(s.seat_label);
+      byPos.set(`${row}-${col}`, s);
+      if (row > maxRow) maxRow = row;
+      if (col > maxCol) maxCol = col;
     }
-    return [...byRow.entries()].sort((a, b) => a[0] - b[0]).map(([, v]) => v);
+    const grid: (SeatCell | null)[][] = [];
+    for (let r = 1; r <= maxRow; r++) {
+      const cols: (SeatCell | null)[] = [];
+      for (let c = 1; c <= maxCol; c++) cols.push(byPos.get(`${r}-${c}`) ?? null);
+      grid.push(cols);
+    }
+    // Centre aisle for 3+ seats across (classic coach layout).
+    const aisleAfter = maxCol >= 3 ? Math.ceil(maxCol / 2) : 0;
+    return { grid, aisleAfter };
   }, [seats]);
 
   const seatById = useMemo(() => new Map(seats.map((s) => [s.seat_id, s])), [seats]);
@@ -101,40 +142,65 @@ export function SeatMap({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-3 text-xs">
-        {LEGEND.map((l) => (
-          <span key={l.key} className="flex items-center gap-1.5">
-            <span className={cn("size-4 rounded border", l.cls)} /> {l.label}
-          </span>
-        ))}
+      {/* Legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+        {LEGEND.map((l) => {
+          const st = SEAT_STYLE[l.key];
+          return (
+            <span key={l.key} className="flex items-center gap-1.5">
+              <span className="relative inline-block size-5" style={{ color: st.color }}>
+                <SeatGlyph solid={st.solid} />
+              </span>
+              {l.label}
+            </span>
+          );
+        })}
       </div>
 
-      <div className="border-border bg-canvas inline-block space-y-2 rounded-lg border p-4">
-        <p className="text-subtle mb-2 text-center text-[11px] tracking-wide">FRONT</p>
-        {rows.map((row, i) => (
-          <div key={i} className="flex justify-center gap-2">
-            {row.map((s) => {
-              const eff = effState(s, selected);
-              const clickable = eff === "available" || eff === "selected";
-              return (
-                <button
-                  key={s.seat_id}
-                  type="button"
-                  disabled={!clickable}
-                  onClick={() => toggle(s)}
-                  title={`${s.seat_label} · ${eff}`}
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-md border text-xs font-medium transition-colors",
-                    CLS[eff],
-                    !clickable && "cursor-not-allowed opacity-80",
-                  )}
-                >
-                  {s.seat_label}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+      {/* Bus body */}
+      <div className="border-border-strong bg-canvas inline-block rounded-[1.75rem] border-2 p-3 sm:p-4">
+        {/* Front: driver + door */}
+        <div className="text-subtle mb-3 flex items-center justify-between px-1">
+          <span
+            aria-hidden
+            className="border-border-strong flex size-7 items-center justify-center rounded-full border-2"
+            title="Driver"
+          >
+            <span className="border-border-strong size-3.5 rounded-full border-2" />
+          </span>
+          <span className="text-[10px] font-semibold tracking-[0.2em]">FRONT</span>
+          <span
+            aria-hidden
+            className="border-border h-7 w-5 rounded-sm border border-dashed"
+            title="Door"
+          />
+        </div>
+
+        {/* Rows */}
+        <div className="space-y-1.5">
+          {grid.map((cols, ri) => (
+            <div key={ri} className="flex items-center justify-center gap-1.5">
+              <span className="text-subtle w-4 text-right text-[10px] tabular-nums">{ri + 1}</span>
+              {cols.map((s, ci) => {
+                const colNo = ci + 1;
+                return (
+                  <div key={ci} className="flex items-center">
+                    {s ? (
+                      <SeatButton
+                        seat={s}
+                        eff={effState(s, selected)}
+                        onToggle={() => toggle(s)}
+                      />
+                    ) : (
+                      <span className="size-9 sm:size-10" aria-hidden />
+                    )}
+                    {aisleAfter === colNo && <span className="w-4 sm:w-6" aria-hidden />}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       {error && <p className="text-danger text-sm">{error}</p>}
@@ -148,9 +214,43 @@ export function SeatMap({
           {pending ? "Holding seats…" : "Hold seats & continue"}
         </Button>
       </div>
-      <p className="text-subtle text-xs">
-        Seats are held for 10 minutes while you complete booking.
-      </p>
+      <p className="text-subtle text-xs">Seats are held for 10 minutes while you complete booking.</p>
     </div>
+  );
+}
+
+function SeatButton({
+  seat,
+  eff,
+  onToggle,
+}: {
+  seat: SeatCell;
+  eff: Eff;
+  onToggle: () => void;
+}) {
+  const st = SEAT_STYLE[eff];
+  return (
+    <button
+      type="button"
+      disabled={!st.clickable}
+      onClick={onToggle}
+      title={`${seat.seat_label} · ${eff}`}
+      style={{ color: st.color }}
+      className={cn(
+        "relative flex size-9 items-center justify-center transition-transform sm:size-10",
+        st.clickable ? "hover:-translate-y-0.5 cursor-pointer" : "cursor-not-allowed",
+        eff === "selected" && "drop-shadow-[0_2px_6px_rgba(11,28,54,0.35)]",
+      )}
+    >
+      <SeatGlyph solid={st.solid} />
+      <span
+        className={cn(
+          "relative text-[9px] font-bold sm:text-[10px]",
+          eff === "selected" ? "text-white" : "text-foreground/80",
+        )}
+      >
+        {seat.seat_label}
+      </span>
+    </button>
   );
 }
