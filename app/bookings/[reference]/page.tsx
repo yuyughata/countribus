@@ -6,6 +6,8 @@ import QRCode from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
+import { SiteHeader } from "@/components/marketing/site-chrome";
+import { PoweredBy } from "@/components/brand/logo";
 import { getAuthContext } from "@/lib/auth/context";
 import { publicEnv } from "@/lib/env";
 import { formatKobo } from "@/lib/money";
@@ -48,12 +50,21 @@ export default async function BookingDetailPage({
   const ticketByPassenger = new Map(tickets.map((t) => [t.passenger_id, t]));
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:px-6">
-      <Link href="/bookings" className="text-muted hover:text-foreground text-sm">
-        ← My bookings
-      </Link>
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl space-y-5 px-4 py-8 sm:px-6">
+        <Link href="/bookings" className="text-muted hover:text-foreground text-sm">
+          ← My bookings
+        </Link>
 
-      <Card>
+        {booking.status === "paid" && (
+          <div className="bg-success-soft text-success flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium">
+            <span className="bg-success size-2 rounded-full" />
+            Payment confirmed — your e-ticket is ready. Confirmation sent by email, SMS & WhatsApp.
+          </div>
+        )}
+
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             {booking.reference}
@@ -65,17 +76,44 @@ export default async function BookingDetailPage({
             <CancelBookingButton bookingId={booking.id} reference={booking.reference} />
           )}
         </CardHeader>
-        <CardContent className="text-muted space-y-1 text-sm">
-          <p className="text-foreground">
-            {booking.schedules?.origin?.name} → {booking.schedules?.destination?.name}
-          </p>
-          <p>
-            {booking.vendors?.name} ·{" "}
-            {booking.schedules
-              ? new Date(booking.schedules.departure_at).toLocaleString("en-NG")
-              : ""}
-          </p>
-          <p>Total paid: {formatKobo(booking.grand_total_kobo)}</p>
+        <CardContent className="text-muted space-y-3 text-sm">
+          <div className="space-y-1">
+            <p className="text-foreground text-base font-semibold">
+              {booking.schedules?.origin?.name} → {booking.schedules?.destination?.name}
+            </p>
+            <p>
+              {booking.vendors?.name} ·{" "}
+              {booking.schedules
+                ? new Date(booking.schedules.departure_at).toLocaleString("en-NG")
+                : ""}
+            </p>
+            <p>Total paid: {formatKobo(booking.grand_total_kobo)}</p>
+          </div>
+
+          <div className="border-border grid gap-3 border-t pt-3 sm:grid-cols-2">
+            <div>
+              <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
+                Boarding address
+              </p>
+              <p className="text-foreground mt-0.5">
+                {booking.schedules?.boarding_address ||
+                  booking.schedules?.origin?.address ||
+                  booking.schedules?.origin?.name ||
+                  "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
+                Contact number
+              </p>
+              <p className="text-foreground mt-0.5">
+                {booking.schedules?.boarding_contact_phone ||
+                  booking.vendors?.contact_phone ||
+                  "—"}
+              </p>
+            </div>
+          </div>
+
           {booking.status === "pending_payment" && (
             <p className="text-warning">
               Payment pending — your seats are held while you complete payment.
@@ -124,7 +162,12 @@ export default async function BookingDetailPage({
             );
           })}
         </div>
-      </div>
-    </main>
+        </div>
+
+        <div className="flex justify-center pt-2">
+          <PoweredBy />
+        </div>
+      </main>
+    </>
   );
 }

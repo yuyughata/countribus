@@ -933,6 +933,8 @@ export type Database = {
         Row: {
           arrival_estimate_at: string | null;
           base_fare_kobo: number | null;
+          boarding_address: string | null;
+          boarding_contact_phone: string | null;
           booking_cutoff_at: string | null;
           capacity: number | null;
           created_at: string;
@@ -953,6 +955,8 @@ export type Database = {
         Insert: {
           arrival_estimate_at?: string | null;
           base_fare_kobo?: number | null;
+          boarding_address?: string | null;
+          boarding_contact_phone?: string | null;
           booking_cutoff_at?: string | null;
           capacity?: number | null;
           created_at?: string;
@@ -973,6 +977,8 @@ export type Database = {
         Update: {
           arrival_estimate_at?: string | null;
           base_fare_kobo?: number | null;
+          boarding_address?: string | null;
+          boarding_contact_phone?: string | null;
           booking_cutoff_at?: string | null;
           capacity?: number | null;
           created_at?: string;

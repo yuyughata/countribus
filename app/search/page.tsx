@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SearchForm } from "@/components/search/search-form";
+import { SiteHeader } from "@/components/marketing/site-chrome";
 import { formatKobo } from "@/lib/money";
 import { listTerminalOptionsPublic, searchJourneys } from "@/features/search/queries";
 
@@ -34,24 +35,23 @@ export default async function SearchPage({
     : [];
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6">
-      <header className="flex items-center justify-between">
-        <Link href="/" className="text-foreground text-lg font-bold tracking-tight">
-          countri<span className="text-primary">bus</span>
-        </Link>
-        <Link href="/login">
-          <Button variant="ghost" size="sm">
-            Sign in
-          </Button>
-        </Link>
-      </header>
-
-      <div>
-        <h1 className="text-foreground text-2xl font-semibold tracking-tight">Find your journey</h1>
-        <p className="text-muted text-sm">
-          Search direct intercity departures from verified operators.
-        </p>
-      </div>
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+        <div>
+          <span className="inline-flex items-center gap-3">
+            <span className="rule-gold" />
+            <span className="text-accent-strong text-[11px] font-semibold tracking-widest uppercase">
+              Plan your trip
+            </span>
+          </span>
+          <h1 className="font-display text-foreground mt-2 text-3xl font-semibold tracking-tight">
+            Find your journey
+          </h1>
+          <p className="text-muted mt-1 text-sm">
+            Search direct intercity departures from verified operators.
+          </p>
+        </div>
 
       <SearchForm
         terminals={terminals}
@@ -108,6 +108,7 @@ export default async function SearchPage({
           )}
         </section>
       )}
-    </main>
+      </main>
+    </>
   );
 }

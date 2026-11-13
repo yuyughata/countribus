@@ -27,7 +27,7 @@ export async function getBookingByReference(reference: string) {
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, reference, status, grand_total_kobo, contact_name, contact_phone, contact_email, schedule_id, vendors(name), schedules(departure_at, origin:origin_terminal_id(name), destination:destination_terminal_id(name))",
+      "id, reference, status, grand_total_kobo, contact_name, contact_phone, contact_email, schedule_id, vendors(name, contact_phone), schedules(departure_at, boarding_address, boarding_contact_phone, origin:origin_terminal_id(name, address), destination:destination_terminal_id(name))",
     )
     .eq("reference", reference)
     .maybeSingle();
@@ -53,10 +53,12 @@ export async function getBookingByReference(reference: string) {
       contact_phone: string;
       contact_email: string | null;
       schedule_id: string;
-      vendors: { name: string } | null;
+      vendors: { name: string; contact_phone: string | null } | null;
       schedules: {
         departure_at: string;
-        origin: { name: string } | null;
+        boarding_address: string | null;
+        boarding_contact_phone: string | null;
+        origin: { name: string; address: string | null } | null;
         destination: { name: string } | null;
       } | null;
     },

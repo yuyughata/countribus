@@ -18,6 +18,7 @@ import {
   UserCircle,
 } from "lucide-react";
 
+import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
@@ -68,11 +69,9 @@ export function Sidebar() {
   return (
     <aside className="border-border bg-sidebar hidden w-64 shrink-0 flex-col border-r lg:flex">
       <div className="flex items-center gap-2 px-5 py-5">
-        <span className="text-foreground text-lg font-bold tracking-tight">
-          countri<span className="text-primary">bus</span>
-        </span>
-        <span className="bg-primary-soft text-primary ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium">
-          Administrator
+        <Logo markClassName="size-6" className="text-base" />
+        <span className="bg-accent-soft text-accent-strong ring-accent/20 ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ring-1">
+          Portal
         </span>
       </div>
 

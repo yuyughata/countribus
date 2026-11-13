@@ -47,6 +47,15 @@ export function formatKobo(kobo: number): string {
   return nairaFormatter.format(koboToNaira(kobo));
 }
 
+/**
+ * ASCII-safe money format, e.g. 1234500 -> "NGN 12,345". The ₦ glyph (U+20A6)
+ * is outside WinAnsi and cannot be drawn with pdf-lib's standard fonts, so
+ * generated PDFs (tickets) use this instead of {@link formatKobo}.
+ */
+export function formatKoboAscii(kobo: number): string {
+  return `NGN ${koboToNaira(kobo).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`;
+}
+
 /** Add money values of the same currency. */
 export function addMoney(a: Money, b: Money): Money {
   if (a.currency !== b.currency) {

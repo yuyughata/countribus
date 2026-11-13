@@ -27,6 +27,24 @@ function formatDeparture(iso: string): string {
   }
 }
 
+/**
+ * Short confirmation for SMS / WhatsApp. Carries the three things a passenger
+ * needs at the terminal: ticket ID, boarding address, and a contact number.
+ */
+export function bookingConfirmationSms(d: BookingConfirmationData & {
+  boardingAddress: string;
+  contactPhone: string;
+}): string {
+  const when = formatDeparture(d.departureAt);
+  return [
+    `Countribus: Booking ${d.reference} confirmed.`,
+    `${d.originCity} to ${d.destinationCity}, ${when}.`,
+    `Board at: ${d.boardingAddress}.`,
+    `Contact: ${d.contactPhone}.`,
+    `Ticket: ${d.ticketUrl}`,
+  ].join(" ");
+}
+
 export function bookingConfirmationEmail(d: BookingConfirmationData): {
   subject: string;
   html: string;

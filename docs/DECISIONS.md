@@ -116,3 +116,31 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   vehicle-overlap exclusion constraint and relocating a shipped extension is
   riskier than the cosmetic benefit. Residual, provider-side items (leaked-
   password protection, auth rate limits) are tracked as launch config, not code.
+
+## Post-launch change request (ticket, boarding details, channels, brand)
+
+- **ADR-0012 Boarding details on the schedule** — a boarding street address and
+  a passenger contact phone are captured when a departure is added
+  (`schedules.boarding_address`, `schedules.boarding_contact_phone`;
+  migration `20261113180000`). They print on the ticket and are sent in every
+  confirmation, falling back to the origin terminal address / vendor phone.
+- **ADR-0013 Ticket redesign** — the PDF e-ticket is a premium navy/gold layout
+  carrying operator (vendor) name, boarding address, contact number, ticket ID
+  (booking reference), QR, and a "Powered by Countribus" footer.
+  - **Bug fixed:** pdf-lib's standard fonts are WinAnsi and cannot encode `₦`
+    (U+20A6) or `→` (U+2192); the fare line crashed ticket generation. PDFs now
+    use `formatKoboAscii` ("NGN 25,000"), a drawn gold chevron, and a `safe()`
+    sanitizer that strips any non-WinAnsi code point from dynamic text.
+- **ADR-0014 Three-channel confirmations** — booking confirmations go out by
+  email (Resend), SMS (Twilio) and WhatsApp (Meta Cloud API). SMS/WhatsApp carry
+  ticket ID, boarding address and contact number. Every channel degrades to a
+  recorded `skipped` when unconfigured; all attempts persist in
+  `public.notifications`.
+- **ADR-0015 Seat classes removed** — Comfort/Panorama classes and per-seat
+  surcharges were removed from the seat-layout editor; seats are standard-only.
+  The surcharge columns remain in the schema (default 0) so inventory/booking
+  code is unaffected.
+- **ADR-0016 Premium brand system** — new design language: midnight-navy ink +
+  brushed-gold accent over warm ivory, Plus Jakarta Sans (UI) + Fraunces
+  (display) type, a Countribus logo/mark component, refined buttons/cards, and a
+  redesigned marketing surface (landing, auth, search, booking funnel, ticket).

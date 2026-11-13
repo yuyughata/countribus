@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { SiteHeader } from "@/components/marketing/site-chrome";
 import { getAuthContext } from "@/lib/auth/context";
 import { formatKobo } from "@/lib/money";
 import { listMyBookings } from "@/features/booking/account";
@@ -24,16 +25,20 @@ export default async function MyBookingsPage() {
   const bookings = await listMyBookings(ctx.userId);
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:px-6">
-      <header className="flex items-center justify-between">
-        <Link href="/" className="text-foreground text-lg font-bold tracking-tight">
-          countri<span className="text-primary">bus</span>
-        </Link>
-        <Link href="/search" className="text-primary text-sm font-medium">
-          Book a journey
-        </Link>
-      </header>
-      <h1 className="text-foreground text-xl font-semibold">My bookings</h1>
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl space-y-5 px-4 py-8 sm:px-6">
+        <div>
+          <span className="inline-flex items-center gap-3">
+            <span className="rule-gold" />
+            <span className="text-accent-strong text-[11px] font-semibold tracking-widest uppercase">
+              Your trips
+            </span>
+          </span>
+          <h1 className="font-display text-foreground mt-2 text-3xl font-semibold tracking-tight">
+            My bookings
+          </h1>
+        </div>
 
       {bookings.length === 0 ? (
         <Card className="text-muted p-8 text-center text-sm">
@@ -66,6 +71,7 @@ export default async function MyBookingsPage() {
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }

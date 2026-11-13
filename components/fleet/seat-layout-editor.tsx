@@ -5,16 +5,12 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { saveSeatTemplate } from "@/features/fleet/actions";
-import { formatKobo, nairaToKobo } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
-type Tool =
-  "standard" | "comfort" | "panorama" | "empty" | "driver" | "wc" | "entrance" | "amenity";
+type Tool = "standard" | "empty" | "driver" | "wc" | "entrance" | "amenity";
 
 const TOOLS: { key: Tool; label: string }[] = [
   { key: "standard", label: "Seat" },
-  { key: "comfort", label: "Comfort" },
-  { key: "panorama", label: "Panorama" },
   { key: "empty", label: "Empty" },
   { key: "driver", label: "Driver" },
   { key: "wc", label: "W/C" },
@@ -24,8 +20,6 @@ const TOOLS: { key: Tool; label: string }[] = [
 
 const TOOL_STYLE: Record<Tool, string> = {
   standard: "bg-surface border-border-strong text-foreground",
-  comfort: "bg-info-soft border-info text-info",
-  panorama: "bg-violet-soft border-violet text-violet",
   empty: "bg-canvas border-dashed border-border text-subtle",
   driver: "bg-warning-soft border-warning text-warning",
   wc: "bg-teal-soft border-teal text-teal",
@@ -39,7 +33,7 @@ const FIXTURE_ABBR: Partial<Record<Tool, string>> = {
   amenity: "☕",
   empty: "",
 };
-const isSeatTool = (t: Tool) => t === "standard" || t === "comfort" || t === "panorama";
+const isSeatTool = (t: Tool) => t === "standard";
 
 export function SeatLayoutEditor({
   vendorId,
@@ -57,8 +51,6 @@ export function SeatLayoutEditor({
   const [rows, setRows] = useState(10);
   const [columns, setColumns] = useState(4);
   const [tool, setTool] = useState<Tool>("standard");
-  const [comfortNaira, setComfortNaira] = useState("2000");
-  const [panoramaNaira, setPanoramaNaira] = useState("3000");
   const [cells, setCells] = useState<Record<string, Tool>>({}); // default unpainted = standard seat
 
   const cellTool = (r: number, c: number): Tool => cells[`${r}-${c}`] ?? "standard";
@@ -73,12 +65,6 @@ export function SeatLayoutEditor({
 
   function paint(r: number, c: number) {
     setCells((prev) => ({ ...prev, [`${r}-${c}`]: tool }));
-  }
-
-  function surchargeFor(t: Tool): number {
-    if (t === "comfort") return nairaToKobo(Number(comfortNaira) || 0);
-    if (t === "panorama") return nairaToKobo(Number(panoramaNaira) || 0);
-    return 0;
   }
 
   function save() {
@@ -103,8 +89,8 @@ export function SeatLayoutEditor({
           col: c,
           seatType: seat ? "standard" : (t as "driver" | "wc" | "entrance" | "amenity"),
           isSellable: seat,
-          seatClass: seat ? t : "fixture",
-          surchargeKobo: seat ? surchargeFor(t) : 0,
+          seatClass: seat ? "standard" : "fixture",
+          surchargeKobo: 0,
         });
       }
     start(async () => {
@@ -150,26 +136,6 @@ export function SeatLayoutEditor({
             onChange={(e) => setColumns(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
           />
         </label>
-        <label className="text-muted space-y-1 text-xs font-medium">
-          Comfort +₦
-          <input
-            className={num}
-            type="number"
-            min={0}
-            value={comfortNaira}
-            onChange={(e) => setComfortNaira(e.target.value)}
-          />
-        </label>
-        <label className="text-muted space-y-1 text-xs font-medium">
-          Panorama +₦
-          <input
-            className={num}
-            type="number"
-            min={0}
-            value={panoramaNaira}
-            onChange={(e) => setPanoramaNaira(e.target.value)}
-          />
-        </label>
       </div>
 
       <div>
@@ -189,8 +155,6 @@ export function SeatLayoutEditor({
               )}
             >
               {t.label}
-              {t.key === "comfort" && ` +${formatKobo(surchargeFor("comfort"))}`}
-              {t.key === "panorama" && ` +${formatKobo(surchargeFor("panorama"))}`}
             </button>
           ))}
         </div>

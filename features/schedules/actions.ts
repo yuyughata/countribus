@@ -64,6 +64,8 @@ export async function createSchedule(input: unknown): Promise<Result<{ scheduleI
       departure_at: new Date(parsed.data.departureAt).toISOString(),
       arrival_estimate_at: new Date(parsed.data.arrivalEstimateAt).toISOString(),
       base_fare_kobo: nairaToKobo(parsed.data.fareNaira),
+      boarding_address: parsed.data.boardingAddress,
+      boarding_contact_phone: parsed.data.boardingContactPhone,
     })
     .select("id")
     .single();

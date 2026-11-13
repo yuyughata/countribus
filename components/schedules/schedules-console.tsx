@@ -72,6 +72,8 @@ export function SchedulesConsole({
     departureAt: "",
     arrivalEstimateAt: "",
     fareNaira: "",
+    boardingAddress: "",
+    boardingContactPhone: "",
   });
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
@@ -169,7 +171,7 @@ export function SchedulesConsole({
             </p>
           ) : (
             <form
-              className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_100px_auto] sm:items-end"
+              className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:items-end"
               onSubmit={(e) => {
                 e.preventDefault();
                 run(() => createSchedule({ vendorId, ...sched }));
@@ -234,8 +236,28 @@ export function SchedulesConsole({
                   onChange={(e) => setSched({ ...sched, fareNaira: e.target.value })}
                 />
               </label>
-              <Button type="submit" disabled={pending}>
-                Add
+              <label className="text-muted space-y-1 text-xs font-medium sm:col-span-2">
+                Boarding address
+                <input
+                  className={field}
+                  required
+                  value={sched.boardingAddress}
+                  onChange={(e) => setSched({ ...sched, boardingAddress: e.target.value })}
+                  placeholder="e.g. 24 Jibowu St, Yaba, Lagos"
+                />
+              </label>
+              <label className="text-muted space-y-1 text-xs font-medium">
+                Boarding contact phone
+                <input
+                  className={field}
+                  required
+                  value={sched.boardingContactPhone}
+                  onChange={(e) => setSched({ ...sched, boardingContactPhone: e.target.value })}
+                  placeholder="e.g. +234 801 234 5678"
+                />
+              </label>
+              <Button type="submit" disabled={pending} className="sm:col-span-2 lg:col-span-1">
+                Add departure
               </Button>
             </form>
           )}
