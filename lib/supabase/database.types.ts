@@ -1,142 +1,214 @@
 /**
- * Supabase database types.
- *
- * Hand-authored for the Phase 1 schema (identity & tenancy) to match
- * `supabase/migrations`. Once the `countribus` project is linked, regenerate
- * the full file with `pnpm run gen:types` (supabase gen types typescript),
- * which will also cover later-phase tables.
+ * Supabase database types — generated from the live `countribus` project.
+ * Regenerate with `pnpm run gen:types` (or the Supabase MCP) after migrations.
+ * The `VendorRole` / `VendorStatus` aliases at the end are hand-added
+ * conveniences consumed across the app.
  */
-
-export type VendorStatus = "pending" | "approved" | "suspended" | "rejected";
-
-export type VendorRole =
-  | "vendor_owner"
-  | "vendor_manager"
-  | "booking_officer"
-  | "terminal_staff"
-  | "luggage_officer"
-  | "finance_officer";
-
-type Timestamps = {
-  created_at: string;
-  updated_at: string;
-};
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.18";
+  };
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          entity: string;
+          entity_id: string | null;
+          id: string;
+          metadata: Json;
+          vendor_id: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          entity: string;
+          entity_id?: string | null;
+          id?: string;
+          metadata?: Json;
+          vendor_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          entity?: string;
+          entity_id?: string | null;
+          id?: string;
+          metadata?: Json;
+          vendor_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_vendor_id_fkey";
+            columns: ["vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
-          id: string;
-          full_name: string | null;
-          phone: string | null;
-          email: string | null;
           avatar_path: string | null;
+          created_at: string;
+          email: string | null;
+          full_name: string | null;
+          id: string;
           is_platform_admin: boolean;
-        } & Timestamps;
+          phone: string | null;
+          updated_at: string;
+        };
         Insert: {
-          id: string;
-          full_name?: string | null;
-          phone?: string | null;
-          email?: string | null;
           avatar_path?: string | null;
-          is_platform_admin?: boolean;
           created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
-        Relationships: [];
-      };
-      vendors: {
-        Row: {
+          email?: string | null;
+          full_name?: string | null;
           id: string;
-          name: string;
-          slug: string;
-          status: VendorStatus;
-          contact_email: string | null;
-          contact_phone: string | null;
-          logo_path: string | null;
-          commission_rate_bps: number | null;
-          created_by: string | null;
-          approved_by: string | null;
-          approved_at: string | null;
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          name: string;
-          slug: string;
-          status?: VendorStatus;
-          contact_email?: string | null;
-          contact_phone?: string | null;
-          logo_path?: string | null;
-          commission_rate_bps?: number | null;
-          created_by?: string | null;
-          approved_by?: string | null;
-          approved_at?: string | null;
-          created_at?: string;
+          is_platform_admin?: boolean;
+          phone?: string | null;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["vendors"]["Insert"]>;
+        Update: {
+          avatar_path?: string | null;
+          created_at?: string;
+          email?: string | null;
+          full_name?: string | null;
+          id?: string;
+          is_platform_admin?: boolean;
+          phone?: string | null;
+          updated_at?: string;
+        };
         Relationships: [];
       };
       vendor_staff: {
         Row: {
-          id: string;
-          vendor_id: string;
-          user_id: string;
-          role: VendorRole;
           assigned_terminal_id: string | null;
+          created_at: string;
+          id: string;
           is_active: boolean;
-        } & Timestamps;
-        Insert: {
-          id?: string;
-          vendor_id: string;
+          role: Database["public"]["Enums"]["vendor_role"];
+          updated_at: string;
           user_id: string;
-          role: VendorRole;
+          vendor_id: string;
+        };
+        Insert: {
           assigned_terminal_id?: string | null;
-          is_active?: boolean;
           created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          role: Database["public"]["Enums"]["vendor_role"];
+          updated_at?: string;
+          user_id: string;
+          vendor_id: string;
+        };
+        Update: {
+          assigned_terminal_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          role?: Database["public"]["Enums"]["vendor_role"];
+          updated_at?: string;
+          user_id?: string;
+          vendor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vendor_staff_vendor_id_fkey";
+            columns: ["vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vendors: {
+        Row: {
+          approved_at: string | null;
+          approved_by: string | null;
+          commission_rate_bps: number | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          logo_path: string | null;
+          name: string;
+          slug: string;
+          status: Database["public"]["Enums"]["vendor_status"];
+          updated_at: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          commission_rate_bps?: number | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          logo_path?: string | null;
+          name: string;
+          slug: string;
+          status?: Database["public"]["Enums"]["vendor_status"];
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["vendor_staff"]["Insert"]>;
-        Relationships: [];
-      };
-      audit_logs: {
-        Row: {
-          id: string;
-          actor_id: string | null;
-          vendor_id: string | null;
-          action: string;
-          entity: string;
-          entity_id: string | null;
-          metadata: Record<string, unknown>;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          actor_id?: string | null;
-          vendor_id?: string | null;
-          action: string;
-          entity: string;
-          entity_id?: string | null;
-          metadata?: Record<string, unknown>;
+        Update: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          commission_rate_bps?: number | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
           created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          logo_path?: string | null;
+          name?: string;
+          slug?: string;
+          status?: Database["public"]["Enums"]["vendor_status"];
+          updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>;
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      [_ in never]: never;
+    };
     Functions: {
-      is_platform_admin: { Args: Record<string, never>; Returns: boolean };
-      current_vendor_ids: { Args: Record<string, never>; Returns: string[] };
-      has_vendor_role: { Args: { p_vendor: string; p_roles: VendorRole[] }; Returns: boolean };
+      current_vendor_ids: { Args: never; Returns: string[] };
+      has_vendor_role: {
+        Args: {
+          p_roles: Database["public"]["Enums"]["vendor_role"][];
+          p_vendor: string;
+        };
+        Returns: boolean;
+      };
+      is_platform_admin: { Args: never; Returns: boolean };
       is_vendor_creator: { Args: { p_vendor: string }; Returns: boolean };
     };
     Enums: {
-      vendor_status: VendorStatus;
-      vendor_role: VendorRole;
+      vendor_role:
+        | "vendor_owner"
+        | "vendor_manager"
+        | "booking_officer"
+        | "terminal_staff"
+        | "luggage_officer"
+        | "finance_officer";
+      vendor_status: "pending" | "approved" | "suspended" | "rejected";
     };
-    CompositeTypes: Record<string, never>;
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 };
+
+/** Hand-added convenience aliases consumed across the app. */
+export type VendorRole = Database["public"]["Enums"]["vendor_role"];
+export type VendorStatus = Database["public"]["Enums"]["vendor_status"];

@@ -31,12 +31,15 @@ Legend: ☑ done · ☐ todo
 - ☑ Vendor onboarding (application → owner bootstrap) + admin decide + add staff
   server actions, with `can()`-based server authz over RLS
 - ☑ Auth UI (`/login`, `/register`) + access-resolution unit tests
-- ☐ Apply migrations to linked `countribus` project; `gen:types` _(blocked on connector)_
-- ☐ Live auth smoke + DB integration tests run against the project
+- ☑ Applied all 4 migrations to the live `countribus` project (ref
+  `nchgcofgwhvukuwynfnp`); `database.types.ts` generated from the live schema;
+  security advisors reviewed (search_path + anon lints cleared)
+- ☐ Live auth smoke (needs app env wired to the project + host allowlisted) and
+  DB integration tests run against the project
 - ☐ Vendor onboarding + approval dashboard screens (wire actions to UI)
 
 **Exit:** cross-vendor access tests fail safely; role matrix enforced server-side + RLS.
-Local proof complete; remaining items need the linked project.
+Schema + RLS live and verified; remaining items are app wiring + screens.
 
 ## Phase 2 — Locations & fleet
 

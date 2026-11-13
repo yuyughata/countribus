@@ -45,13 +45,25 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 
 ## Environment / tooling notes
 
-- Supabase connector timed out at session start and did not reconnect; the
-  hosted `countribus` project was **not** linked. Phase 1 migrations are
-  authored and were validated against a **local Postgres 16** using a harness
-  that emulates the Supabase `auth` schema/roles (`tests/db/`). They still need
-  to be applied to the live project (`supabase db push`) and `gen:types` run,
-  which require the connector (or a fresh session) — MCP connections bind at
-  session start, so an in-session reconnect won't attach.
+- Supabase connector timed out at session start, then reconnected after a
+  worker restart. The hosted **`countribus`** project (ref
+  `nchgcofgwhvukuwynfnp`, Postgres 17, eu-west-1) is now **linked**, and all
+  four Phase 1 migrations have been **applied live** via the Supabase MCP
+  (`list_migrations` confirms them). `database.types.ts` is generated from the
+  live schema. The second ID the owner supplied (`vdggexjlaohjlcqadbgr`) matched
+  no project on the account and was discarded — the ref was confirmed by project
+  name via `list_projects`.
+- **Security advisors** after migrating: `search_path` and the _anon_
+  can-execute lints are cleared. One WARN remains —
+  `authenticated_security_definer_function_executable` for the four RLS helpers
+  (`is_platform_admin`, `current_vendor_ids`, `has_vendor_role`,
+  `is_vendor_creator`). `authenticated` must hold `EXECUTE` for these or the RLS
+  policies that call them fail (verified empirically), and they only ever return
+  the _caller's own_ authorization status. Accepted residual; a later option is
+  to move them to a non-exposed (`private`) schema to clear it entirely.
+- Earlier blocker (now moot): the container's HTTPS proxy blocks direct Supabase
+  hosts and raw Postgres ports, so `supabase db push` / `psql` can't reach the
+  project from here — the MCP tools are the connection path in this session.
 - **ADR-0007 RLS guard functions** — triggers that must detect the _caller's_
   role (`service_role` vs `authenticated`) are `SECURITY INVOKER`; helpers that
   must read rows RLS would hide (vendor ownership during owner bootstrap) are
