@@ -1,50 +1,105 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+
+import { Menu, X } from "lucide-react";
 
 import { Logo, PoweredBy } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const NAV: [string, string][] = [
+  ["Find a trip", "/search"],
+  ["My bookings", "/bookings"],
+];
 
 /**
  * Public marketing chrome. `tone="light"` sits over the dark hero (white text);
- * `tone="ink"` is the solid light header used on interior public pages.
+ * `tone="ink"` is the solid light header used on interior public pages. Collapses
+ * to a hamburger menu on phones.
  */
 export function SiteHeader({ tone = "ink" }: { tone?: "ink" | "light" }) {
   const light = tone === "light";
+  const [open, setOpen] = useState(false);
+
   return (
     <header
-      className={
+      className={cn(
+        "relative z-40",
         light
-          ? "flex items-center justify-between"
-          : "border-border bg-surface/80 sticky top-0 z-30 flex items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-6"
-      }
+          ? "flex items-center justify-between py-1"
+          : "border-border bg-surface/85 sticky top-0 flex items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-6",
+      )}
     >
-      <Link href="/" aria-label="Countribus home">
+      <Link href="/" aria-label="Countribus home" onClick={() => setOpen(false)}>
         <Logo tone={light ? "light" : "ink"} />
       </Link>
-      <nav className="flex items-center gap-1 sm:gap-2">
-        <Link href="/search">
-          <Button variant="ghost" size="sm" className={light ? "text-white hover:bg-white/10" : ""}>
-            Find a trip
-          </Button>
-        </Link>
-        <Link href="/bookings">
-          <Button variant="ghost" size="sm" className={light ? "text-white hover:bg-white/10" : ""}>
-            My bookings
-          </Button>
-        </Link>
+
+      {/* Desktop nav */}
+      <nav className="hidden items-center gap-1 sm:flex sm:gap-2">
+        {NAV.map(([label, href]) => (
+          <Link key={href} href={href}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={light ? "text-white hover:bg-white/10" : ""}
+            >
+              {label}
+            </Button>
+          </Link>
+        ))}
         <Link href="/dashboard">
           <Button variant={light ? "accent" : "secondary"} size="sm">
             Operator portal
           </Button>
         </Link>
       </nav>
+
+      {/* Mobile toggle */}
+      <button
+        type="button"
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex size-10 items-center justify-center rounded-lg sm:hidden",
+          light ? "text-white hover:bg-white/10" : "text-foreground hover:bg-surface-muted",
+        )}
+      >
+        {open ? <X className="size-5" /> : <Menu className="size-5" />}
+      </button>
+
+      {/* Mobile menu panel */}
+      {open && (
+        <div className="absolute top-full right-0 left-0 mt-2 px-4 sm:hidden">
+          <div className="border-border bg-surface space-y-1 rounded-xl border p-2 shadow-[var(--shadow-pop)]">
+            {NAV.map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="text-foreground hover:bg-surface-muted block rounded-lg px-3 py-2.5 text-sm font-medium"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link href="/dashboard" onClick={() => setOpen(false)} className="block pt-1">
+              <Button variant="secondary" className="w-full">
+                Operator portal
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="bg-ink-gradient mt-20 text-white">
-      <div className="mx-auto max-w-6xl px-6 py-14">
+    <footer className="bg-ink-gradient mt-16 text-white sm:mt-20">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 sm:py-14">
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="max-w-xs">
             <Logo tone="light" />
@@ -53,7 +108,7 @@ export function SiteFooter() {
               payments and electronic tickets.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3 sm:gap-10">
             <FooterCol
               title="Travel"
               links={[
@@ -77,7 +132,7 @@ export function SiteFooter() {
             />
           </div>
         </div>
-        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center">
           <PoweredBy tone="light" />
           <p>© {new Date().getFullYear()} Countribus. All rights reserved.</p>
         </div>

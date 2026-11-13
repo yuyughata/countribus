@@ -14,81 +14,40 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { SiteFooter, SiteHeader } from "@/components/marketing/site-chrome";
+import { HeroScene } from "@/components/marketing/hero-scene";
+import { HeroSearch } from "@/components/marketing/hero-search";
+import { listTerminalOptionsPublic } from "@/features/search/queries";
 
-export default function Home() {
+export default async function Home() {
+  const terminals = await listTerminalOptionsPublic().catch(() => []);
+
   return (
     <main className="min-h-full">
       {/* ---------------------------------------------------------------- Hero */}
-      <section className="bg-ink-gradient relative overflow-hidden text-white">
-        <div className="pointer-events-none absolute -top-24 -right-24 size-96 rounded-full bg-[radial-gradient(circle,rgba(200,161,92,0.22),transparent_70%)]" />
-        <div className="relative mx-auto max-w-6xl px-6 pt-5 pb-20 sm:pb-28">
+      <section className="relative isolate overflow-hidden">
+        <HeroScene className="absolute inset-0 -z-20 size-full" />
+        {/* Legibility scrims */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-ink/80 via-brand-ink/45 to-brand-ink/10" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-canvas to-transparent" />
+
+        <div className="relative mx-auto max-w-6xl px-5 pt-4 pb-14 sm:px-6 sm:pb-20">
           <SiteHeader tone="light" />
 
-          <div className="mx-auto mt-16 max-w-3xl text-center sm:mt-20">
-            <span className="border-accent/40 text-accent inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium tracking-wide">
+          <div className="max-w-2xl pt-12 pb-9 sm:pt-20 sm:pb-12">
+            <span className="border-accent/40 text-accent inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-wide sm:text-xs">
               <span className="bg-accent size-1.5 rounded-full" />
               Nigeria&apos;s intercity bus marketplace
             </span>
-            <h1 className="font-display mt-6 text-balance text-4xl leading-[1.05] font-semibold tracking-tight sm:text-6xl">
-              Travel the country in
-              <span className="text-accent"> first class</span>, book it in seconds.
+            <h1 className="font-display mt-5 text-balance text-3xl leading-[1.08] font-semibold tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
+              Affordable coach travel &amp; bus tickets across Nigeria
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-pretty text-base text-white/70 sm:text-lg">
-              Live seat selection, secure payments and electronic tickets — across every state,
-              from operators vetted and verified for your peace of mind.
+            <p className="mt-4 max-w-xl text-pretty text-sm text-white/80 sm:text-base">
+              Compare fares from trusted operators and book your seat in seconds — from just{" "}
+              <span className="font-semibold text-white">₦8,500</span>.
             </p>
-
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/search">
-                <Button variant="accent" size="lg" className="gap-2">
-                  <Search className="size-4" /> Search journeys
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/25 bg-white/5 text-white hover:bg-white/10"
-                >
-                  Operator portal
-                </Button>
-              </Link>
-            </div>
           </div>
 
-          {/* Quick-search entry card */}
-          <Link
-            href="/search"
-            className="glass shadow-[var(--shadow-lift)] mx-auto mt-14 flex max-w-3xl items-center gap-3 rounded-2xl p-2.5 ring-1 ring-black/5 transition-transform hover:-translate-y-0.5"
-          >
-            <div className="text-muted grid flex-1 grid-cols-1 gap-2 px-2 sm:grid-cols-3">
-              <span className="flex items-center gap-2 py-2 text-sm">
-                <MapPin className="text-accent-strong size-4" /> From — any city
-              </span>
-              <span className="border-border flex items-center gap-2 py-2 text-sm sm:border-l sm:pl-4">
-                <MapPin className="text-accent-strong size-4" /> To — any city
-              </span>
-              <span className="border-border flex items-center gap-2 py-2 text-sm sm:border-l sm:pl-4">
-                <Ticket className="text-accent-strong size-4" /> Pick your date
-              </span>
-            </div>
-            <span className="bg-primary text-primary-foreground inline-flex size-11 shrink-0 items-center justify-center rounded-xl shadow-[0_6px_18px_rgba(224,126,54,0.3)]">
-              <Search className="size-5" />
-            </span>
-          </Link>
-
-          <dl className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-6 border-t border-white/10 pt-8 text-center">
-            {[
-              ["37", "States & FCT covered"],
-              ["Secure", "Pay securely with Paystack"],
-              ["0", "Seats ever double-sold"],
-            ].map(([n, label]) => (
-              <div key={label}>
-                <dt className="font-display text-accent text-3xl font-semibold sm:text-4xl">{n}</dt>
-                <dd className="mt-1 text-xs text-white/60 sm:text-sm">{label}</dd>
-              </div>
-            ))}
-          </dl>
+          <HeroSearch terminals={terminals} />
         </div>
       </section>
 
