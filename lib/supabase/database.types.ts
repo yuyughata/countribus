@@ -59,6 +59,117 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["location_aliases"]["Insert"]>;
         Relationships: [];
       };
+      routes: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          origin_terminal_id: string;
+          destination_terminal_id: string;
+          name: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          origin_terminal_id: string;
+          destination_terminal_id: string;
+          name: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["routes"]["Insert"]>;
+        Relationships: [];
+      };
+      route_stops: {
+        Row: {
+          id: string;
+          route_id: string;
+          terminal_id: string;
+          stop_order: number;
+          is_pickup: boolean;
+          is_dropoff: boolean;
+        };
+        Insert: {
+          id?: string;
+          route_id: string;
+          terminal_id: string;
+          stop_order: number;
+          is_pickup?: boolean;
+          is_dropoff?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["route_stops"]["Insert"]>;
+        Relationships: [];
+      };
+      schedules: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          route_id: string;
+          vehicle_id: string | null;
+          seat_template_id: string | null;
+          seat_template_version: number | null;
+          origin_terminal_id: string;
+          destination_terminal_id: string;
+          departure_at: string;
+          arrival_estimate_at: string | null;
+          base_fare_kobo: number | null;
+          currency: string;
+          booking_cutoff_at: string | null;
+          capacity: number | null;
+          status: Database["public"]["Enums"]["schedule_status"];
+          service_window: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          route_id: string;
+          vehicle_id?: string | null;
+          seat_template_id?: string | null;
+          seat_template_version?: number | null;
+          origin_terminal_id: string;
+          destination_terminal_id: string;
+          departure_at: string;
+          arrival_estimate_at?: string | null;
+          base_fare_kobo?: number | null;
+          currency?: string;
+          booking_cutoff_at?: string | null;
+          capacity?: number | null;
+          status?: Database["public"]["Enums"]["schedule_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["schedules"]["Insert"]>;
+        Relationships: [];
+      };
+      schedule_seats: {
+        Row: {
+          id: string;
+          schedule_id: string;
+          seat_label: string;
+          seat_id: string;
+          state: Database["public"]["Enums"]["seat_state"];
+          booking_passenger_id: string | null;
+          held_until: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          schedule_id: string;
+          seat_label: string;
+          seat_id: string;
+          state?: Database["public"]["Enums"]["seat_state"];
+          booking_passenger_id?: string | null;
+          held_until?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["schedule_seats"]["Insert"]>;
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_path: string | null;
@@ -282,9 +393,14 @@ export type Database = {
       is_platform_admin: { Args: Record<string, never>; Returns: boolean };
       is_vendor_creator: { Args: { p_vendor: string }; Returns: boolean };
       seat_template_vendor: { Args: { p_template: string }; Returns: string };
+      schedule_vendor: { Args: { p_schedule: string }; Returns: string };
+      schedule_public: { Args: { p_schedule: string }; Returns: boolean };
+      publish_schedule: { Args: { p_schedule: string }; Returns: undefined };
     };
     Enums: {
       seat_type: "standard" | "window" | "aisle" | "driver" | "blocked";
+      schedule_status: "draft" | "published" | "cancelled" | "departed" | "completed";
+      seat_state: "available" | "booked" | "held" | "blocked";
       vehicle_status: "active" | "inactive" | "maintenance";
       vendor_role:
         | "vendor_owner"
@@ -304,3 +420,5 @@ export type VendorRole = Database["public"]["Enums"]["vendor_role"];
 export type VendorStatus = Database["public"]["Enums"]["vendor_status"];
 export type SeatType = Database["public"]["Enums"]["seat_type"];
 export type VehicleStatus = Database["public"]["Enums"]["vehicle_status"];
+export type ScheduleStatus = Database["public"]["Enums"]["schedule_status"];
+export type SeatState = Database["public"]["Enums"]["seat_state"];

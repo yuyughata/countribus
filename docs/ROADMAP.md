@@ -58,12 +58,17 @@ Legend: ☑ done · ☐ todo
   officer & terminal staff cannot, cross-vendor blocked, published template
   frozen, anon reads reference data
 
-## Phase 3 — Routes & schedules
+## Phase 3 — Routes & schedules ✅ (live)
 
-- ☐ Routes + stops; direct schedules with fare, vehicle assignment, cut-off
-- ☐ Publish flow: snapshot seat-layout version; generate `schedule_seats`
-- ☐ Vehicle no-overlap / turnaround constraint
-- ☐ Tests: published schedule has stable vehicle/layout snapshot + valid inventory
+- ☑ Routes (+ route_stops), schedules with fare/vehicle/cut-off; applied live
+- ☑ `publish_schedule()` RPC: authorize → snapshot seat-layout version →
+  generate `schedule_seats` inventory, atomically
+- ☑ Vehicle no-overlap via a GiST exclusion constraint on (vehicle, window)
+- ☑ Seat-allocation partial unique index (a seat booked/held at most once)
+- ☑ Tests: `tests/db/phase3_rls.sql` (7/7) — publish authz, snapshot+capacity,
+  inventory generated, overlap rejected, anon sees published schedule + seat map
+- ☑ App: routes/schedules console (create route, create + publish/cancel
+  schedule), server actions + RLS
 
 ## Phase 4 — Search & seat inventory
 

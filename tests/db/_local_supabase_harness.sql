@@ -21,15 +21,28 @@ create table if not exists auth.users (
   created_at timestamptz not null default now()
 );
 
--- auth.uid() reads the JWT claims GUC, exactly like Supabase.
+-- auth.uid()/auth.role() read the JWT claims GUC like Supabase, but tolerate an
+-- empty/unset/invalid value (returns null) the way the hosted functions do.
 create or replace function auth.uid() returns uuid
-language sql stable as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'sub', '')::uuid;
+language plpgsql stable as $$
+declare c text;
+begin
+  c := current_setting('request.jwt.claims', true);
+  if c is null or c = '' then return null; end if;
+  return nullif(c::jsonb ->> 'sub', '')::uuid;
+exception when others then return null;
+end;
 $$;
 
 create or replace function auth.role() returns text
-language sql stable as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'role', '');
+language plpgsql stable as $$
+declare c text;
+begin
+  c := current_setting('request.jwt.claims', true);
+  if c is null or c = '' then return null; end if;
+  return nullif(c::jsonb ->> 'role', '');
+exception when others then return null;
+end;
 $$;
 
 grant usage on schema public to anon, authenticated, service_role;
