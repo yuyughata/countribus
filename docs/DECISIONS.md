@@ -160,3 +160,19 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   wording with "Pay securely with Paystack" on the landing page and checkout
   CTA (the CTA reflects the chosen provider). The webhook-verification mechanism
   is unchanged; only the customer-facing language is friendlier.
+
+## Role-aware menus + completed dashboard pages
+
+- **ADR-0019 Capability-driven dashboard nav** — each dashboard route maps to a
+  required capability (`lib/permissions/dashboard-nav.ts`). The layout computes
+  the allowed hrefs from the auth context and passes them to the sidebar and the
+  mobile drawer, which filter the menu. Every nav item now points to a real page,
+  and each page re-checks the capability server-side
+  (`requireDashboardCapability`, redirecting unauthorized access to /dashboard) —
+  the hidden menu item is never the only guard. Verified by logging in as every
+  demo role: Super Admin 13 items, Vendor Owner 10, Vendor Manager 7, Booking
+  Officer 3, Terminal Staff 3, Passenger 2 — all visible items load (no 404s).
+- Built the previously-missing pages: routes, finance, reports, security,
+  activity, permissions, settings, profile. `vendor_staff_list` (SECURITY
+  DEFINER, guarded) lets an owner/manager see their team roster with names,
+  which profiles RLS would otherwise hide.

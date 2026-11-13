@@ -3,10 +3,18 @@ import { Bell, LogOut, Search } from "lucide-react";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { logoutAction } from "@/features/auth/actions";
 
-export function Topbar({ title, email }: { title: string; email?: string | null }) {
+export function Topbar({
+  title,
+  email,
+  allowed,
+}: {
+  title: string;
+  email?: string | null;
+  allowed?: string[];
+}) {
   return (
     <header className="border-border bg-canvas flex h-16 items-center gap-3 border-b px-4 sm:gap-4 sm:px-5">
-      <MobileNav />
+      <MobileNav allowed={allowed} />
       <h1 className="text-foreground text-base font-semibold">{title}</h1>
       <div className="relative mx-auto hidden w-full max-w-md md:block">
         <Search className="text-subtle absolute top-1/2 left-3 size-4 -translate-y-1/2" />

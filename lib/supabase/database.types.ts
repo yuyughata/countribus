@@ -1638,6 +1638,16 @@ export type Database = {
         Args: { p_from?: string; p_to?: string; p_vendor: string };
         Returns: Json;
       };
+      vendor_staff_list: {
+        Args: { p_vendor: string };
+        Returns: {
+          user_id: string;
+          full_name: string | null;
+          email: string | null;
+          role: Database["public"]["Enums"]["vendor_role"];
+          is_active: boolean;
+        }[];
+      };
       verify_ticket: { Args: { p_qr_token: string }; Returns: Json };
     };
     Enums: {

@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { SidebarBrand, SidebarNav } from "@/components/dashboard/sidebar";
 
 /** Hamburger + slide-in sidebar drawer for the dashboard on phones/tablets (< lg). */
-export function MobileNav() {
+export function MobileNav({ allowed }: { allowed?: string[] }) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll while the drawer is open.
@@ -52,7 +52,7 @@ export function MobileNav() {
                 <X className="size-5" />
               </button>
             </div>
-            <SidebarNav onNavigate={() => setOpen(false)} />
+            <SidebarNav allowed={allowed} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}

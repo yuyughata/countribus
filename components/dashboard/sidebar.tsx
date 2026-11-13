@@ -35,17 +35,26 @@ export function NavLink({
   );
 }
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  allowed,
+  onNavigate,
+}: {
+  allowed?: string[];
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+  const show = (href: string) => !allowed || allowed.includes(href);
+  const primary = primaryNav.filter((i) => show(i.href));
+  const secondary = secondaryNav.filter((i) => show(i.href));
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-      {primaryNav.map((item) => (
+      {primary.map((item) => (
         <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onNavigate} />
       ))}
-      <div className="border-border my-3 border-t" />
-      {secondaryNav.map((item) => (
+      {secondary.length > 0 && <div className="border-border my-3 border-t" />}
+      {secondary.map((item) => (
         <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onNavigate} />
       ))}
     </nav>
@@ -64,11 +73,11 @@ export function SidebarBrand() {
 }
 
 /** Desktop sidebar (lg+). Mobile uses the drawer in MobileNav. */
-export function Sidebar() {
+export function Sidebar({ allowed }: { allowed?: string[] }) {
   return (
     <aside className="border-border bg-sidebar hidden w-64 shrink-0 flex-col border-r lg:flex">
       <SidebarBrand />
-      <SidebarNav />
+      <SidebarNav allowed={allowed} />
     </aside>
   );
 }
