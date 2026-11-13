@@ -1,235 +1,148 @@
-import {
-  Wallet,
-  Bus,
-  Users,
-  UserPlus,
-  CheckCircle2,
-  ClipboardCheck,
-  Route as RouteIcon,
-  Send,
-} from "lucide-react";
+import Link from "next/link";
+
+import { Bus, CheckCircle2, ClipboardCheck, Users, Wallet } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
+import { getAuthContext } from "@/lib/auth/context";
 import { formatKobo } from "@/lib/money";
+import { dashboardMode, getAdminDashboard, getVendorDashboard } from "@/features/dashboard/queries";
 
 export const metadata = { title: "Dashboard" };
 
-// NOTE: seeded demo data for UI development only — clearly separated from
-// production records (plan §11 sequencing note). Replaced by live queries in
-// later phases.
-const revenueTrend = [320, 410, 230, 540, 480, 300, 390, 350, 420, 300, 280, 500];
-const months = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-const peakIndex = revenueTrend.indexOf(Math.max(...revenueTrend));
+export default async function DashboardPage() {
+  const ctx = await getAuthContext();
+  if (!ctx) return null;
+  const mode = dashboardMode(ctx);
 
-const quickActions = [
-  { label: "Approve vendor", icon: CheckCircle2, tone: "info" as const },
-  { label: "Add vehicle", icon: Bus, tone: "violet" as const },
-  { label: "Create route", icon: RouteIcon, tone: "primary" as const },
-  { label: "Send notification", icon: Send, tone: "teal" as const },
-];
+  if (mode.mode === "vendor") {
+    const m = await getVendorDashboard(mode.vendorId);
+    return (
+      <div className="space-y-5 p-5">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Welcome back 👋</h2>
+          <p className="text-sm text-muted">Your operator performance.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard label="Gross bookings" value={formatKobo(m?.gross_booking_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="primary" />
+          <StatCard label="Net revenue" value={formatKobo(m?.net_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="success" />
+          <StatCard label="Paid bookings" value={String(m?.bookings_paid ?? 0)} icon={<ClipboardCheck className="size-4" />} tone="info" />
+          <StatCard label="Upcoming trips" value={String(m?.upcoming_trips ?? 0)} icon={<Bus className="size-4" />} tone="violet" />
+          <StatCard label="Active vehicles" value={String(m?.vehicles ?? 0)} icon={<Bus className="size-4" />} tone="teal" />
+        </div>
+        <Card className="p-5 text-sm text-muted">
+          Manage your <Link href="/dashboard/fleet" className="font-medium text-primary">fleet</Link>,{" "}
+          <Link href="/dashboard/schedules" className="font-medium text-primary">schedules</Link> and{" "}
+          <Link href="/dashboard/manifests" className="font-medium text-primary">departures</Link>.
+        </Card>
+      </div>
+    );
+  }
 
-const pendingApprovals = [
-  { name: "Peace Mass Transit", detail: "Vendor application · Enugu" },
-  { name: "GUO Transport", detail: "Fleet document review" },
-  { name: "ABC Transport", detail: "Payout account change" },
-];
+  if (mode.mode === "none") {
+    return (
+      <div className="space-y-5 p-5">
+        <h2 className="text-xl font-semibold text-foreground">Welcome 👋</h2>
+        <Card className="p-6 text-sm text-muted">
+          You don&apos;t manage an operator yet.{" "}
+          <Link href="/dashboard/vendors/new" className="font-medium text-primary">Onboard your transport business</Link> to get started.
+        </Card>
+      </div>
+    );
+  }
 
-const recentActivity = [
-  { tone: "bg-success", text: "Booking confirmed · Lagos → Abuja", time: "2m ago" },
-  { tone: "bg-info", text: "New vendor registered · God is Good Motors", time: "18m ago" },
-  { tone: "bg-warning", text: "Payment exception flagged · ref PSK-2231", time: "41m ago" },
-  { tone: "bg-violet", text: "Schedule published · Benin → Port Harcourt", time: "1h ago" },
-];
-
-const toneBar: Record<string, string> = {
-  info: "bg-info-soft text-info",
-  violet: "bg-violet-soft text-violet",
-  primary: "bg-primary-soft text-primary",
-  teal: "bg-teal-soft text-teal",
-};
-
-export default function DashboardPage() {
-  const maxBar = Math.max(...revenueTrend);
+  const { metrics, revenue, pending, activity } = await getAdminDashboard();
+  const maxBar = Math.max(1, ...revenue.map((r) => r.gross_kobo));
 
   return (
     <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-[1fr_320px]">
       <div className="space-y-5">
         <div>
-          <h2 className="text-foreground text-xl font-semibold">Welcome back 👋</h2>
-          <p className="text-muted text-sm">Here&apos;s an overview of platform activity.</p>
+          <h2 className="text-xl font-semibold text-foreground">Welcome back 👋</h2>
+          <p className="text-sm text-muted">Platform activity overview.</p>
         </div>
 
-        {/* KPI cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            label="Gross booking value"
-            value={formatKobo(153413400)}
-            icon={<Wallet className="size-4" />}
-            tone="primary"
-            deltaPct={24.5}
-            footer="From Jan 01 – Jul 30, 2024"
-          />
-          <StatCard
-            label="Active trips"
-            value="300"
-            icon={<Bus className="size-4" />}
-            tone="info"
-            deltaPct={24.5}
-            footer="From Jan 01 – Jul 30, 2024"
-          />
-          <StatCard
-            label="Registered vendors"
-            value="1,200"
-            icon={<Users className="size-4" />}
-            tone="violet"
-            deltaPct={-4.5}
-            footer="From Jan 01 – Jul 30, 2024"
-          />
+          <StatCard label="Gross booking value" value={formatKobo(metrics?.gross_booking_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="primary" />
+          <StatCard label="Platform commission" value={formatKobo(metrics?.commission_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="success" />
+          <StatCard label="Active trips" value={String(metrics?.active_trips ?? 0)} icon={<Bus className="size-4" />} tone="info" />
+          <StatCard label="Paid bookings" value={String(metrics?.bookings_paid ?? 0)} icon={<ClipboardCheck className="size-4" />} tone="violet" />
+          <StatCard label="Approved vendors" value={String(metrics?.vendors ?? 0)} icon={<Users className="size-4" />} tone="teal" />
+          <StatCard label="Passengers" value={String(metrics?.passengers ?? 0)} icon={<Users className="size-4" />} tone="primary" />
         </div>
 
-        {/* Quick actions */}
-        <div>
-          <h3 className="text-foreground mb-3 text-sm font-semibold">Quick actions</h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map(({ label, icon: Icon, tone }) => (
-              <button
-                key={label}
-                type="button"
-                className="border-border bg-surface text-foreground hover:bg-surface-muted flex items-center gap-3 rounded-lg border p-3 text-left text-sm font-medium transition-colors"
-              >
-                <span
-                  className={`flex size-8 items-center justify-center rounded-md ${toneBar[tone]}`}
-                >
-                  <Icon className="size-4" />
-                </span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue trend</CardTitle>
-              <Badge tone="neutral">Jan 2023 – Jul 2024</Badge>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue trend</CardTitle>
+            <Badge tone="neutral">Last 12 months</Badge>
+          </CardHeader>
+          <CardContent>
+            {revenue.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted">No revenue recorded yet.</p>
+            ) : (
               <div className="flex h-44 gap-2">
-                {revenueTrend.map((v, i) => (
-                  <div
-                    key={i}
-                    className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                  >
+                {revenue.map((r, i) => (
+                  <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
                     <div
                       className="w-full rounded-t"
-                      style={{
-                        height: `${(v / maxBar) * 90}%`,
-                        backgroundColor:
-                          i === peakIndex
-                            ? "var(--color-chart-bar-active)"
-                            : "var(--color-chart-bar)",
-                      }}
-                      title={`${months[i]}: ${v}`}
+                      style={{ height: `${(r.gross_kobo / maxBar) * 90}%`, backgroundColor: "var(--color-chart-bar)" }}
+                      title={`${r.month}: ${formatKobo(r.gross_kobo)}`}
                     />
-                    <span className="text-subtle text-[10px]">{months[i]}</span>
+                    <span className="text-[10px] text-subtle">{r.month}</span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Trip distribution</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-5">
-              <div
-                className="size-28 rounded-full"
-                style={{
-                  background:
-                    "conic-gradient(var(--color-info) 0 45%, var(--color-primary) 45% 78%, var(--color-danger) 78% 100%)",
-                }}
-                role="img"
-                aria-label="Trip distribution: 45% 18-seater, 33% Coaster, 22% luxury coach"
-              >
-                <div className="flex size-full items-center justify-center">
-                  <div className="bg-surface size-16 rounded-full" />
-                </div>
-              </div>
-              <ul className="space-y-2 text-xs">
-                <li className="flex items-center gap-2">
-                  <span className="bg-info size-2.5 rounded-full" /> 18-seater · 45%
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="bg-primary size-2.5 rounded-full" /> Coaster · 33%
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="bg-danger size-2.5 rounded-full" /> Luxury coach · 22%
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Right rail */}
       <aside className="space-y-5">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Pending approvals <Badge tone="primary">{pendingApprovals.length}</Badge>
+              Pending approvals <Badge tone="primary">{pending.length}</Badge>
             </CardTitle>
-            <button className="text-primary text-xs font-medium">See all</button>
+            <Link href="/dashboard/vendors" className="text-xs font-medium text-primary">See all</Link>
           </CardHeader>
           <CardContent className="space-y-3 pt-3">
-            {pendingApprovals.map((a) => (
-              <div key={a.name} className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-foreground truncate text-sm font-medium">{a.name}</p>
-                  <p className="text-muted truncate text-xs">{a.detail}</p>
+            {pending.length === 0 ? (
+              <p className="text-sm text-muted">No pending applications.</p>
+            ) : (
+              pending.map((v) => (
+                <div key={v.id} className="flex items-center justify-between gap-3">
+                  <p className="truncate text-sm font-medium text-foreground">{v.name}</p>
+                  <Link href="/dashboard/vendors">
+                    <Button size="sm" className="shrink-0">Review</Button>
+                  </Link>
                 </div>
-                <Button size="sm" className="shrink-0">
-                  Review
-                </Button>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ClipboardCheck className="text-muted size-4" /> Recent activity
+              <CheckCircle2 className="size-4 text-muted" /> Recent activity
             </CardTitle>
-            <button className="text-primary text-xs font-medium">See all</button>
           </CardHeader>
           <CardContent className="space-y-3 pt-3">
-            {recentActivity.map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className={`mt-1.5 size-2 shrink-0 rounded-full ${item.tone}`} />
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm">{item.text}</p>
-                  <p className="text-subtle text-xs">{item.time}</p>
+            {activity.length === 0 ? (
+              <p className="text-sm text-muted">No recent activity.</p>
+            ) : (
+              activity.map((a, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-info" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground">{a.action.replace(/[._]/g, " ")}</p>
+                    <p className="text-xs text-subtle">{new Date(a.created_at).toLocaleString("en-NG")}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-3">
-            <span className="bg-success-soft text-success flex size-8 items-center justify-center rounded-md">
-              <UserPlus className="size-4" />
-            </span>
-            <div>
-              <p className="text-foreground text-sm font-medium">New passengers</p>
-              <p className="text-muted text-xs">+320 this week</p>
-            </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </aside>

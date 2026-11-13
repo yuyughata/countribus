@@ -24,6 +24,10 @@ const serverSchema = z.object({
   PAYSTACK_WEBHOOK_SECRET: z.string().optional(),
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   FLUTTERWAVE_WEBHOOK_HASH: z.string().optional(),
+  // Transactional email (Phase 7 notifications). Optional until provisioned;
+  // when absent, confirmation emails are recorded as `skipped`, never failed.
+  RESEND_API_KEY: z.string().optional(),
+  NOTIFICATIONS_FROM_EMAIL: z.string().email().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
@@ -56,6 +60,8 @@ export function serverEnv(): ServerEnv {
     PAYSTACK_WEBHOOK_SECRET: process.env.PAYSTACK_WEBHOOK_SECRET,
     FLUTTERWAVE_SECRET_KEY: process.env.FLUTTERWAVE_SECRET_KEY,
     FLUTTERWAVE_WEBHOOK_HASH: process.env.FLUTTERWAVE_WEBHOOK_HASH,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    NOTIFICATIONS_FROM_EMAIL: process.env.NOTIFICATIONS_FROM_EMAIL,
   });
   return _server;
 }
