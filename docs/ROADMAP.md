@@ -34,12 +34,17 @@ Legend: ☑ done · ☐ todo
 - ☑ Applied all 4 migrations to the live `countribus` project (ref
   `nchgcofgwhvukuwynfnp`); `database.types.ts` generated from the live schema;
   security advisors reviewed (search_path + anon lints cleared)
-- ☐ Live auth smoke (needs app env wired to the project + host allowlisted) and
-  DB integration tests run against the project
-- ☐ Vendor onboarding + approval dashboard screens (wire actions to UI)
+- ☑ Live end-to-end smoke against the project: logged in through the real app,
+  RLS-scoped admin view, clicked **Approve** → server action + guard + audit
+  trigger all fired (verified in DB), then demo data removed. Also ran the full
+  tenant-isolation suite live in a rolled-back transaction (6/6).
+- ☑ Vendor onboarding (`/dashboard/vendors/new`) + admin approval/list
+  (`/dashboard/vendors`) screens wired to the actions; dashboard gated by auth;
+  logout wired.
 
-**Exit:** cross-vendor access tests fail safely; role matrix enforced server-side + RLS.
-Schema + RLS live and verified; remaining items are app wiring + screens.
+**Exit:** ✅ cross-vendor access fails safely; role matrix enforced server-side
+
+- RLS; onboarding→approval flow works end-to-end against the live project.
 
 ## Phase 2 — Locations & fleet
 

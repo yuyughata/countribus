@@ -64,6 +64,18 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 - Earlier blocker (now moot): the container's HTTPS proxy blocks direct Supabase
   hosts and raw Postgres ports, so `supabase db push` / `psql` can't reach the
   project from here — the MCP tools are the connection path in this session.
+- **ADR-0008 Cache Components off** — `next.config.ts` sets
+  `cacheComponents: false`. The authenticated dashboard reads auth cookies and
+  is per-user dynamic, so Next 16's static-first Cache Components model only adds
+  friction (prerender errors) with no benefit there; static routes (`/`, auth
+  pages) still prerender.
+- **Live verification done this session**: added `nchgcofgwhvukuwynfnp.supabase.co`
+  to the environment allowlist, wired `.env.local` (public URL + anon key;
+  gitignored), and ran the app with `NODE_USE_ENV_PROXY=1` (the container's
+  Node needs the proxy for `fetch`). Logged in as a seeded admin and exercised
+  the onboarding + approval screens end-to-end against the live project; demo
+  rows were removed afterward. GoTrue signups from here hit the project's email
+  rate limit / domain policy — a project auth-settings matter, not app code.
 - **ADR-0007 RLS guard functions** — triggers that must detect the _caller's_
   role (`service_role` vs `authenticated`) are `SECURITY INVOKER`; helpers that
   must read rows RLS would hide (vendor ownership during owner bootstrap) are

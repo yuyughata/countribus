@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { canForVendor, canPlatform, requireUser } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
@@ -103,4 +104,23 @@ export async function addVendorStaff(
 
   revalidatePath("/dashboard/vendors");
   return { ok: true, data: undefined };
+}
+
+// --- Form-bound wrappers (for useActionState) -------------------------------
+
+export type OnboardState = { error: string } | null;
+
+/** Vendor onboarding form submit → create application, then go to the list. */
+export async function onboardVendorAction(
+  _prev: OnboardState,
+  formData: FormData,
+): Promise<OnboardState> {
+  const res = await createVendorApplication({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    contactEmail: formData.get("contactEmail"),
+    contactPhone: formData.get("contactPhone"),
+  });
+  if (!res.ok) return { error: res.error };
+  redirect("/dashboard/vendors");
 }
