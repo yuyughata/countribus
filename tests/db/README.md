@@ -12,6 +12,15 @@ Supabase-managed `auth` schema and roles (`anon`, `authenticated`,
 - `phase1_rls.sql` — Phase 1 tenancy suite: owner bootstrap, cross-vendor
   isolation, self-approval guard, privilege-escalation guard, admin approval +
   audit, and anonymous marketplace visibility. Prints `PASS`/`FAIL` per check.
+- `phase7_dashboards_notifications.sql` — Phase 7 suite: notifications RLS
+  (own-rows-only, admin-sees-all, cannot write another user's preferences),
+  and metrics authz — `admin_dashboard_metrics`/`admin_revenue_by_month`
+  admin-only (no leak to non-admins), `vendor_dashboard_metrics` tenant-scoped
+  (owner reads own vendor, blocked cross-tenant).
+
+Each suite is **independent** and expects a FRESH database (harness + all
+migrations). Do not stack suites in one database — they reuse fixed IDs and
+seed data, so running several against the same DB produces false failures.
 
 ## Run locally
 

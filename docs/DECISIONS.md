@@ -83,3 +83,36 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   `is_platform_admin`). Mixing these up caused the first local test run to fail —
   fixed and re-validated.
 - Next.js 16 uses the `proxy.ts` convention (formerly `middleware.ts`).
+
+## Phase 7 — Dashboards & communications
+
+- **ADR-0009 Metrics via guarded SECURITY DEFINER RPCs** — dashboard figures
+  come from `admin_dashboard_metrics()`, `vendor_dashboard_metrics(vendor)` and
+  `admin_revenue_by_month()`. They are `SECURITY DEFINER` so they can aggregate
+  across the financial ledger and bookings without granting the caller direct
+  read on those rows, but each one re-checks `is_platform_admin()` /
+  `has_vendor_role(vendor, …)` on entry and raises/returns empty otherwise.
+  Tenant isolation and admin-only access are proven in
+  `tests/db/phase7_dashboards_notifications.sql`.
+- **ADR-0010 Notifications are best-effort, never on the payment path** — the
+  payment webhook confirms the booking first, then queues the confirmation
+  email in a try/catch that cannot fail the webhook (the money is already
+  recorded). Every attempt is persisted to `public.notifications` with a
+  terminal status (`sent`/`skipped`/`failed`). When no email provider is
+  configured the send is recorded `skipped`, not `failed`, so unprovisioned
+  environments stay green and ops can backfill. Email transport is pluggable
+  (`lib/notifications/email.ts`, Resend by default) and credentials are
+  server-only env (`RESEND_API_KEY`, `NOTIFICATIONS_FROM_EMAIL`).
+
+## Phase 8 — Hardening & launch
+
+- **ADR-0011 Expected Supabase advisor lints are documented, not "fixed"** —
+  `docs/SECURITY_REVIEW.md` records which linter findings are intentional:
+  (a) `rls_enabled_no_policy` on `payment_transactions`, `webhook_events`,
+  `ticket_delivery_events` is the desired deny-all posture (service-role only);
+  (b) `anon/authenticated_security_definer_function_executable` covers the guest
+  booking RPCs (designed for anon) and the internally-guarded metrics/helpers;
+  (c) `extension_in_public` for `btree_gist` is accepted — it backs the
+  vehicle-overlap exclusion constraint and relocating a shipped extension is
+  riskier than the cosmetic benefit. Residual, provider-side items (leaked-
+  password protection, auth rate limits) are tracked as launch config, not code.

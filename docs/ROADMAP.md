@@ -128,10 +128,24 @@ Legend: ☑ done · ☐ todo
 - ☑ PWA baseline shipped earlier (`/manifest.webmanifest`, installable shell)
 - ☐ SMS/WhatsApp channels + scheduled daily summaries + delivery retries (later)
 
-## Phase 8 — Hardening & launch
+## Phase 8 — Hardening & launch ✅ (review + runbook live; pilot gated)
 
-- ☐ Security review, performance, accessibility pass
-- ☐ Backup/restore, monitoring, incident runbook; UAT; provider production checks
+- ☑ Security review (`docs/SECURITY_REVIEW.md`): trust model, two-layer authz,
+  secrets handling, payment integrity; every Supabase security advisor finding
+  triaged + dispositioned (deny-all RLS and guest/guarded SECURITY DEFINER
+  functions are intentional)
+- ☑ Performance pass: `auth_rls_initplan` advisor fixed via
+  `20261113170000_perf_rls_initplan.sql` (9 policies, semantics-preserving,
+  re-validated); remaining INFO/WARN findings dispositioned
+- ☑ Phase 7 DB suite added with negative permission tests
+  (`tests/db/phase7_dashboards_notifications.sql`, 12/12); all 7 suites green on
+  fresh DBs (70 checks total)
+- ☑ Operations runbook (`docs/RUNBOOK.md`): deploy, backup/restore drill,
+  monitoring signals, incident response, launch checklist, a11y/perf baseline,
+  pilot plan
+- ☐ Launch-config residuals (provider prod keys, email provider, auth
+  leaked-password protection, PITR/restore drill, provider verify-GET) — owned
+  by cutover, tracked in `SECURITY_REVIEW §6` / `RUNBOOK §6`
 - ☐ Pilot with vetted vendors + limited routes; load-test seat contention
 
 **Immediate next task:** Phase 8 — security review (document the expected
