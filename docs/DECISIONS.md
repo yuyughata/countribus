@@ -45,7 +45,17 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 
 ## Environment / tooling notes
 
-- Supabase connector timed out at session start; the hosted `countribus` project
-  was **not** linked during Phase 0. Migrations are specified in
-  `DATABASE_SCHEMA.md` and authored once the connector is restored.
+- Supabase connector timed out at session start and did not reconnect; the
+  hosted `countribus` project was **not** linked. Phase 1 migrations are
+  authored and were validated against a **local Postgres 16** using a harness
+  that emulates the Supabase `auth` schema/roles (`tests/db/`). They still need
+  to be applied to the live project (`supabase db push`) and `gen:types` run,
+  which require the connector (or a fresh session) — MCP connections bind at
+  session start, so an in-session reconnect won't attach.
+- **ADR-0007 RLS guard functions** — triggers that must detect the _caller's_
+  role (`service_role` vs `authenticated`) are `SECURITY INVOKER`; helpers that
+  must read rows RLS would hide (vendor ownership during owner bootstrap) are
+  `SECURITY DEFINER` (`is_vendor_creator`, `current_vendor_ids`, `has_vendor_role`,
+  `is_platform_admin`). Mixing these up caused the first local test run to fail —
+  fixed and re-validated.
 - Next.js 16 uses the `proxy.ts` convention (formerly `middleware.ts`).

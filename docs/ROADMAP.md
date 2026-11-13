@@ -20,15 +20,23 @@ Legend: ☑ done · ☐ todo
 **Exit:** app boots; lint/typecheck/CI pass; secrets separated; docs committed. ✅
 (DB link pending connector.)
 
-## Phase 1 — Identity & tenancy
+## Phase 1 — Identity & tenancy (IN PROGRESS)
 
-- ☐ Migrations: `profiles`, `vendors`, `vendor_staff`, platform roles + RLS
-- ☐ Supabase Auth: register/login/logout, session, profile bootstrap trigger
-- ☐ Vendor onboarding + super-admin approval workflow + audit log
-- ☐ Role assignment UI; server guards wired to `can()`
-- ☐ Tests: cross-vendor access fails safely; role matrix enforced in RLS
+- ☑ Migrations: `profiles`, `vendors`, `vendor_staff`, `audit_logs` + RLS,
+  helper functions and guard triggers — **validated against real Postgres**
+  (`tests/db/phase1_rls.sql`, 12 assertions incl. cross-vendor isolation,
+  self-approval + privilege-escalation guards, admin approval + audit)
+- ☑ Profile bootstrap trigger (`handle_new_user`) + platform-admin guard
+- ☑ Supabase Auth server actions: register / login / logout (+ validation)
+- ☑ Vendor onboarding (application → owner bootstrap) + admin decide + add staff
+  server actions, with `can()`-based server authz over RLS
+- ☑ Auth UI (`/login`, `/register`) + access-resolution unit tests
+- ☐ Apply migrations to linked `countribus` project; `gen:types` _(blocked on connector)_
+- ☐ Live auth smoke + DB integration tests run against the project
+- ☐ Vendor onboarding + approval dashboard screens (wire actions to UI)
 
 **Exit:** cross-vendor access tests fail safely; role matrix enforced server-side + RLS.
+Local proof complete; remaining items need the linked project.
 
 ## Phase 2 — Locations & fleet
 
