@@ -11,6 +11,7 @@ import { PoweredBy } from "@/components/brand/logo";
 import { getAuthContext } from "@/lib/auth/context";
 import { publicEnv } from "@/lib/env";
 import { formatKobo } from "@/lib/money";
+import { PASSENGER_TYPE_LABEL } from "@/lib/booking/passenger-types";
 import { getBookingByReference } from "@/features/booking/account";
 
 export const metadata = { title: "Booking" };
@@ -132,9 +133,15 @@ export default async function BookingDetailPage({
             return (
               <Card key={i} className="flex items-center justify-between gap-4 p-4">
                 <div>
-                  <p className="text-foreground text-sm font-semibold">{p.passengers?.full_name}</p>
+                  <p className="text-foreground flex items-center gap-2 text-sm font-semibold">
+                    {p.passengers?.full_name}
+                    <span className="bg-surface-muted text-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
+                      {PASSENGER_TYPE_LABEL[p.passenger_type]}
+                    </span>
+                  </p>
                   <p className="text-muted text-xs">
-                    Seat {p.seat_label} · {formatKobo(p.fare_kobo)} ·{" "}
+                    {p.seat_label ? `Seat ${p.seat_label}` : "Lap infant (no seat)"} ·{" "}
+                    {p.fare_kobo === 0 ? "Free" : formatKobo(p.fare_kobo)} ·{" "}
                     {p.boarding_status.replace("_", " ")}
                   </p>
                 </div>

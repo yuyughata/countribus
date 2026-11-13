@@ -112,9 +112,10 @@ export type Database = {
           fare_kobo: number;
           id: string;
           passenger_id: string;
+          passenger_type: Database["public"]["Enums"]["passenger_type"];
           schedule_id: string;
-          seat_id: string;
-          seat_label: string;
+          seat_id: string | null;
+          seat_label: string | null;
         };
         Insert: {
           boarding_status?: Database["public"]["Enums"]["boarding_status"];
@@ -122,9 +123,10 @@ export type Database = {
           fare_kobo: number;
           id?: string;
           passenger_id: string;
+          passenger_type?: Database["public"]["Enums"]["passenger_type"];
           schedule_id: string;
-          seat_id: string;
-          seat_label: string;
+          seat_id?: string | null;
+          seat_label?: string | null;
         };
         Update: {
           boarding_status?: Database["public"]["Enums"]["boarding_status"];
@@ -132,9 +134,10 @@ export type Database = {
           fare_kobo?: number;
           id?: string;
           passenger_id?: string;
+          passenger_type?: Database["public"]["Enums"]["passenger_type"];
           schedule_id?: string;
-          seat_id?: string;
-          seat_label?: string;
+          seat_id?: string | null;
+          seat_label?: string | null;
         };
         Relationships: [
           {
@@ -1553,6 +1556,7 @@ export type Database = {
         Args: {
           p_contact: Json;
           p_hold_token: string;
+          p_infants?: Json;
           p_passengers: Json;
           p_schedule: string;
         };
@@ -1659,6 +1663,7 @@ export type Database = {
         | "carton"
         | "sack"
         | "other";
+      passenger_type: "adult" | "child_1_5" | "child_6_10";
       payment_provider: "paystack" | "flutterwave";
       payment_status: "initialized" | "pending" | "success" | "failed" | "abandoned";
       schedule_status: "draft" | "published" | "cancelled" | "departed" | "completed";
@@ -1827,6 +1832,7 @@ export const Constants = {
         "sack",
         "other",
       ],
+      passenger_type: ["adult", "child_1_5", "child_6_10"],
       payment_provider: ["paystack", "flutterwave"],
       payment_status: ["initialized", "pending", "success", "failed", "abandoned"],
       schedule_status: ["draft", "published", "cancelled", "departed", "completed"],
@@ -1866,3 +1872,4 @@ export type SeatState = Database["public"]["Enums"]["seat_state"];
 export type BookingStatus = Database["public"]["Enums"]["booking_status"];
 export type PaymentProvider = Database["public"]["Enums"]["payment_provider"];
 export type LuggageType = Database["public"]["Enums"]["luggage_type"];
+export type PassengerType = Database["public"]["Enums"]["passenger_type"];

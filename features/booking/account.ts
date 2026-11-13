@@ -35,7 +35,7 @@ export async function getBookingByReference(reference: string) {
 
   const { data: bps } = await supabase
     .from("booking_passengers")
-    .select("passenger_id, seat_label, fare_kobo, boarding_status, passengers(full_name)")
+    .select("passenger_id, seat_label, fare_kobo, boarding_status, passenger_type, passengers(full_name)")
     .eq("booking_id", (booking as { id: string }).id);
 
   const { data: tickets } = await supabase
@@ -64,9 +64,10 @@ export async function getBookingByReference(reference: string) {
     },
     passengers: (bps ?? []) as unknown as {
       passenger_id: string;
-      seat_label: string;
+      seat_label: string | null;
       fare_kobo: number;
       boarding_status: string;
+      passenger_type: "adult" | "child_1_5" | "child_6_10";
       passengers: { full_name: string } | null;
     }[],
     tickets: (tickets ?? []) as {

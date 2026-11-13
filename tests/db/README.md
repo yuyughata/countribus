@@ -12,6 +12,10 @@ Supabase-managed `auth` schema and roles (`anon`, `authenticated`,
 - `phase1_rls.sql` — Phase 1 tenancy suite: owner bootstrap, cross-vendor
   isolation, self-approval guard, privilege-escalation guard, admin approval +
   audit, and anonymous marketplace visibility. Prints `PASS`/`FAIL` per check.
+- `phase8_passenger_types.sql` — passenger types: server-side fares (adult full,
+  child 6–10 half, child 1–5 free), lap infants consume no seat, and the
+  negative guards (a seated passenger can't be a 1–5 infant; the seat-type check
+  constraint blocks a seated infant row).
 - `phase7_dashboards_notifications.sql` — Phase 7 suite: notifications RLS
   (own-rows-only, admin-sees-all, cannot write another user's preferences),
   and metrics authz — `admin_dashboard_metrics`/`admin_revenue_by_month`

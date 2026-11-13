@@ -24,8 +24,9 @@ export async function listDepartures() {
 
 export type ManifestRow = {
   id: string;
-  seat_label: string;
+  seat_label: string | null;
   boarding_status: string;
+  passenger_type: "adult" | "child_1_5" | "child_6_10";
   passengers: { full_name: string } | null;
   bookings: { reference: string; contact_phone: string; status: string } | null;
   luggage_items: { count: number }[];
@@ -44,11 +45,11 @@ export async function getManifest(scheduleId: string) {
   const { data: rows } = await supabase
     .from("booking_passengers")
     .select(
-      "id, seat_label, boarding_status, passengers(full_name), bookings!inner(reference, contact_phone, status), luggage_items(count)",
+      "id, seat_label, boarding_status, passenger_type, passengers(full_name), bookings!inner(reference, contact_phone, status), luggage_items(count)",
     )
     .eq("schedule_id", scheduleId)
     .eq("bookings.status", "paid")
-    .order("seat_label");
+    .order("seat_label", { nullsFirst: false });
 
   return {
     schedule: schedule as unknown as {

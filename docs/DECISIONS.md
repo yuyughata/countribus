@@ -144,3 +144,19 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   brushed-gold accent over warm ivory, Plus Jakarta Sans (UI) + Fraunces
   (display) type, a Countribus logo/mark component, refined buttons/cards, and a
   redesigned marketing surface (landing, auth, search, booking funnel, ticket).
+
+## Passenger types & Paystack copy
+
+- **ADR-0017 Passenger types with server-side fares** — new `passenger_type`
+  enum (adult, child_1_5, child_6_10). Pricing is computed in
+  `create_booking_from_hold`, never trusted from the client:
+  adult = full fare, child 6–10 = half (seated), child 1–5 = **free, lap, no
+  seat**. Lap infants are `booking_passengers` rows with a NULL seat (columns
+  made nullable; a check constraint enforces "infant ⇔ no seat"), so they appear
+  on manifests and get a ticket but consume no inventory. Seat holds still equal
+  the number of seated passengers. Covered by
+  `tests/db/phase8_passenger_types.sql` (fares + negative guards).
+- **ADR-0018 Customer-facing payment copy** — replaced the "webhook-verified"
+  wording with "Pay securely with Paystack" on the landing page and checkout
+  CTA (the CTA reflects the chosen provider). The webhook-verification mechanism
+  is unchanged; only the customer-facing language is friendlier.

@@ -34,7 +34,7 @@ export async function GET(
       .maybeSingle(),
     supabase
       .from("booking_passengers")
-      .select("seat_label, fare_kobo")
+      .select("seat_label, fare_kobo, passenger_type")
       .eq("booking_id", ticket.booking_id)
       .eq("passenger_id", ticket.passenger_id)
       .maybeSingle(),
@@ -151,11 +151,18 @@ export async function GET(
     draw(value, x, yy - 15, 12, bold, text);
   };
   const rowGap = 46;
+  const isInfant = bp?.passenger_type === "child_1_5";
+  const paxTypeLabel =
+    bp?.passenger_type === "child_6_10"
+      ? "Child (6-10)"
+      : bp?.passenger_type === "child_1_5"
+        ? "Child (1-5, lap)"
+        : "Adult";
   field("Ticket ID", b?.reference ?? "—", M, y);
-  field("Seat", bp?.seat_label ?? "—", col2, y);
+  field("Seat", isInfant ? "Lap infant" : (bp?.seat_label ?? "—"), col2, y);
   y -= rowGap;
-  field("Passenger", passenger?.full_name ?? "—", M, y);
-  field("Fare", bp ? formatKoboAscii(bp.fare_kobo) : "—", col2, y);
+  field("Passenger", `${passenger?.full_name ?? "—"} · ${paxTypeLabel}`, M, y);
+  field("Fare", bp ? (bp.fare_kobo === 0 ? "Free" : formatKoboAscii(bp.fare_kobo)) : "—", col2, y);
   y -= rowGap;
   field("Operator", b?.vendors?.name ?? "—", M, y);
   field("Contact", contactPhone, col2, y);

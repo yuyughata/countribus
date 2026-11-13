@@ -80,7 +80,7 @@ export default function Home() {
           <dl className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-6 border-t border-white/10 pt-8 text-center">
             {[
               ["37", "States & FCT covered"],
-              ["100%", "Webhook-verified payments"],
+              ["Secure", "Pay securely with Paystack"],
               ["0", "Seats ever double-sold"],
             ].map(([n, label]) => (
               <div key={label}>
@@ -112,8 +112,8 @@ export default function Home() {
             },
             {
               icon: ShieldCheck,
-              title: "Verified payments",
-              body: "Paystack & Flutterwave, confirmed only by a signed provider webhook. No surprises.",
+              title: "Pay securely with Paystack",
+              body: "Checkout with cards, bank transfer or USSD. Your payment is verified before your seat is confirmed — no surprises.",
             },
             {
               icon: Luggage,

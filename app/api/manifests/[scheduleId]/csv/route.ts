@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getManifest } from "@/features/ops/queries";
+import { PASSENGER_TYPE_LABEL } from "@/lib/booking/passenger-types";
 
 function csvCell(v: string | number | null | undefined): string {
   const s = String(v ?? "");
@@ -17,13 +18,14 @@ export async function GET(
   const { schedule, rows } = await getManifest(scheduleId);
   if (!schedule) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const header = ["Seat", "Passenger", "Booking", "Phone", "Boarding", "Bags"];
+  const header = ["Seat", "Passenger", "Type", "Booking", "Phone", "Boarding", "Bags"];
   const lines = [header.join(",")];
   for (const r of rows) {
     lines.push(
       [
-        csvCell(r.seat_label),
+        csvCell(r.seat_label ?? "Lap infant"),
         csvCell(r.passengers?.full_name),
+        csvCell(PASSENGER_TYPE_LABEL[r.passenger_type]),
         csvCell(r.bookings?.reference),
         csvCell(r.bookings?.contact_phone),
         csvCell(r.boarding_status),

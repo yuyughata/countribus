@@ -12,7 +12,9 @@ export type CheckoutInput = {
   holdToken: string;
   provider: PaymentProvider;
   contact: { name: string; phone: string; email?: string };
-  passengers: { seat_id: string; full_name: string; phone?: string }[];
+  passengers: { seat_id: string; full_name: string; phone?: string; type: "adult" | "child_6_10" }[];
+  /** Lap infants (child 1–5): free, no seat. */
+  infants?: { full_name: string }[];
   luggage?: { seat_id: string; type: string; quantity: number }[];
 };
 
@@ -34,6 +36,7 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
   for (const p of input.passengers) {
     if (!p.full_name.trim()) return { ok: false, error: "Enter every passenger's name" };
   }
+  const infants = (input.infants ?? []).filter((i) => i.full_name.trim());
   if (!input.contact.name.trim() || !input.contact.phone.trim()) {
     return { ok: false, error: "Enter booking contact details" };
   }
@@ -44,6 +47,7 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
     p_hold_token: input.holdToken,
     p_contact: input.contact,
     p_passengers: input.passengers,
+    p_infants: infants,
   });
   if (error) return { ok: false, error: error.message };
   const booking = (data as { booking_id: string; reference: string }[])[0];

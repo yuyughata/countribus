@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BoardingControls } from "@/components/ops/boarding-controls";
+import { PASSENGER_TYPE_LABEL } from "@/lib/booking/passenger-types";
 import { getManifest } from "@/features/ops/queries";
 
 export const metadata = { title: "Manifest" };
@@ -61,12 +62,22 @@ export default async function ManifestPage({
               {rows.map((r) => (
                 <div key={r.id} className="flex items-center justify-between gap-4 p-4">
                   <div className="flex items-center gap-3">
-                    <span className="bg-surface-muted text-foreground inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium">
-                      {r.seat_label}
+                    <span
+                      className={
+                        "inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium " +
+                        (r.seat_label
+                          ? "bg-surface-muted text-foreground"
+                          : "bg-accent-soft text-accent-strong text-xs")
+                      }
+                    >
+                      {r.seat_label ?? "LAP"}
                     </span>
                     <div>
-                      <p className="text-foreground text-sm font-semibold">
+                      <p className="text-foreground flex items-center gap-2 text-sm font-semibold">
                         {r.passengers?.full_name}
+                        <span className="bg-surface-muted text-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
+                          {PASSENGER_TYPE_LABEL[r.passenger_type]}
+                        </span>
                       </p>
                       <p className="text-muted text-xs">
                         {r.bookings?.reference} · {r.bookings?.contact_phone} ·{" "}
