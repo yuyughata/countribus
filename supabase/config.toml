@@ -1,0 +1,45 @@
+# Supabase CLI configuration for the Countribus project.
+# Link to the hosted "countribus" project with:  supabase link --project-ref <ref>
+# Full reference: https://supabase.com/docs/guides/cli/config
+
+project_id = "countribus"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.migrations]
+# Apply migrations in supabase/migrations in filename order.
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+# Set the real site URL per environment; localhost for local dev.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[storage]
+enabled = true
+# Private buckets only; access via signed URLs (plan §13).
+file_size_limit = "10MiB"
+
+[realtime]
+enabled = true

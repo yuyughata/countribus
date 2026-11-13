@@ -1,0 +1,17 @@
+-- ---------------------------------------------------------------------------
+-- Countribus seed data (development only)
+-- ---------------------------------------------------------------------------
+-- Applied with `supabase db reset` (local) after migrations. NEVER seed into
+-- production. Keep demo data clearly separated from real records (plan §11).
+--
+-- Reference data (Nigeria's 36 states + FCT, terminals, vehicle categories)
+-- will be added here in Phase 2 once the locations/fleet migrations exist.
+-- Placeholder until the schema lands.
+-- ---------------------------------------------------------------------------
+
+-- Example (to be enabled once the `states` table exists in a migration):
+-- insert into public.states (code, name) values
+--   ('FC', 'Federal Capital Territory'),
+--   ('LA', 'Lagos'),
+--   ('RI', 'Rivers')
+-- on conflict (code) do nothing;
