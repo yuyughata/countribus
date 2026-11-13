@@ -1638,6 +1638,10 @@ export type Database = {
         Args: { p_from?: string; p_to?: string; p_vendor: string };
         Returns: Json;
       };
+      set_platform_commission: {
+        Args: { p_bps: number };
+        Returns: number;
+      };
       vendor_staff_list: {
         Args: { p_vendor: string };
         Returns: {

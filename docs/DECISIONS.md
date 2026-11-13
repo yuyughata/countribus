@@ -176,3 +176,14 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   activity, permissions, settings, profile. `vendor_staff_list` (SECURITY
   DEFINER, guarded) lets an owner/manager see their team roster with names,
   which profiles RLS would otherwise hide.
+
+## Admin-settable platform commission
+
+- **ADR-0020 Commission set by admin under Settings** — the marketplace
+  commission percentage is configured by a platform admin at
+  /dashboard/settings. `set_platform_commission(p_bps)` (SECURITY DEFINER,
+  admin-only, audited) closes the current open platform rule and appends a new
+  `commission_rules` row; `confirm_payment` already reads the newest platform
+  rule, so new paid bookings use the new rate while existing bookings are
+  unchanged. The UI shows the live rate (read-only for operators). Verified
+  end-to-end against the live project. Percentage → basis points (12.5% = 1250).
