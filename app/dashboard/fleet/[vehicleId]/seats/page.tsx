@@ -40,10 +40,16 @@ export default async function SeatLayoutPage({
         <ArrowLeft className="size-4" /> Back to fleet
       </Link>
       <div>
-        <h2 className="text-foreground text-xl font-semibold">
-          Seat layout · {vehicle.display_name || vehicle.registration_no}
-        </h2>
-        <p className="text-muted text-sm">
+        <span className="inline-flex items-center gap-3">
+          <span className="rule-gold" />
+          <span className="text-accent-strong text-[11px] font-semibold tracking-widest uppercase">
+            Seat layout
+          </span>
+        </span>
+        <h1 className="font-display text-foreground mt-1.5 text-2xl font-semibold tracking-tight">
+          {vehicle.display_name || vehicle.registration_no}
+        </h1>
+        <p className="text-muted mt-1 text-sm">
           Design the physical seat map. Published layouts are frozen — create a new version to
           change them.
         </p>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
+import { DashboardHeader } from "@/components/dashboard/page-header";
 import { SchedulesConsole } from "@/components/schedules/schedules-console";
 import { firstManageableVendorId, getAuthContext } from "@/lib/auth/context";
 import {
@@ -25,13 +26,11 @@ export default async function SchedulesPage() {
 
   return (
     <div className="space-y-5 p-5">
-      <div>
-        <h2 className="text-foreground text-xl font-semibold">Routes & schedules</h2>
-        <p className="text-muted text-sm">
-          Create routes, schedule departures, assign vehicles and publish for sale. Publishing
-          snapshots the seat layout and generates seat inventory.
-        </p>
-      </div>
+      <DashboardHeader
+        eyebrow="Operations"
+        title="Routes & schedules"
+        subtitle="Create routes, schedule departures, assign vehicles and publish for sale. Publishing snapshots the seat layout and generates seat inventory."
+      />
 
       {vendorId ? (
         <SchedulesConsole

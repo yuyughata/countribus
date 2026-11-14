@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/field";
 import { saveSeatTemplate } from "@/features/fleet/actions";
 import { cn } from "@/lib/utils";
 
@@ -100,8 +101,7 @@ export function SeatLayoutEditor({
     });
   }
 
-  const num =
-    "h-9 w-20 rounded-md border border-border bg-surface px-2 text-sm focus-visible:border-primary focus-visible:outline-none";
+  const num = cn(fieldClass, "h-9 w-20");
 
   return (
     <div className="space-y-5">

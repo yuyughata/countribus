@@ -74,6 +74,37 @@ export async function createSchedule(input: unknown): Promise<Result<{ scheduleI
   return { ok: true, data: { scheduleId: data.id } };
 }
 
+/**
+ * Delete a route (owner/manager/admin). Blocked by FK if the route still has
+ * schedules — we surface a clear message instead of a raw DB error.
+ */
+export async function deleteRoute(routeId: string): Promise<Result> {
+  const ctx = await requireUser();
+  const supabase = await createClient();
+  const { data: route } = await supabase
+    .from("routes")
+    .select("vendor_id")
+    .eq("id", routeId)
+    .maybeSingle();
+  if (!route) return { ok: false, error: "Route not found" };
+  if (!canForVendor(ctx, route.vendor_id, "route:manage")) {
+    return { ok: false, error: "Not allowed to manage routes for this vendor" };
+  }
+  const { error } = await supabase.from("routes").delete().eq("id", routeId);
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        ok: false,
+        error: "This route still has schedules. Cancel or remove those departures first.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/dashboard/routes");
+  revalidatePath("/dashboard/schedules");
+  return { ok: true, data: undefined };
+}
+
 export async function publishSchedule(scheduleId: string): Promise<Result> {
   await requireUser();
   const supabase = await createClient();

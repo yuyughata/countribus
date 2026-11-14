@@ -14,7 +14,9 @@ export default async function LoginPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-foreground text-lg font-semibold">Welcome back</h1>
+        <h1 className="font-display text-foreground text-2xl font-semibold tracking-tight">
+          Welcome back
+        </h1>
         <p className="text-muted text-sm">Sign in to your Countribus account.</p>
       </div>
       <AuthForm

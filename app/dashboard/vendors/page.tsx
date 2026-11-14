@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DashboardHeader } from "@/components/dashboard/page-header";
 import { VendorDecisionButtons } from "@/components/vendors/vendor-decision-buttons";
 import { getAuthContext } from "@/lib/auth/context";
 import { listVisibleVendors } from "@/features/vendors/queries";
@@ -26,21 +27,22 @@ export default async function VendorsPage() {
 
   return (
     <div className="space-y-5 p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-foreground text-xl font-semibold">Vendor management</h2>
-          <p className="text-muted text-sm">
-            {isAdmin
-              ? "Review applications and manage operators across the platform."
-              : "Your transport operator profile and status."}
-          </p>
-        </div>
-        <Link href="/dashboard/vendors/new">
-          <Button className="gap-2">
-            <Plus className="size-4" /> New operator
-          </Button>
-        </Link>
-      </div>
+      <DashboardHeader
+        eyebrow="Operators"
+        title="Vendor management"
+        subtitle={
+          isAdmin
+            ? "Review applications and manage operators across the platform."
+            : "Your transport operator profile and status."
+        }
+        action={
+          <Link href="/dashboard/vendors/new">
+            <Button className="gap-2">
+              <Plus className="size-4" /> New operator
+            </Button>
+          </Link>
+        }
+      />
 
       {vendors.length === 0 ? (
         <Card className="p-10 text-center">

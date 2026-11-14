@@ -187,3 +187,72 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   rule, so new paid bookings use the new rate while existing bookings are
   unchanged. The UI shows the live rate (read-only for operators). Verified
   end-to-end against the live project. Percentage → basis points (12.5% = 1250).
+
+## Delete vehicle/route + realistic seat map
+
+- **ADR-0021 Delete vehicle & route** — owner/manager/admin can delete a vehicle
+  or a route from the dashboard (`deleteVehicle`, `deleteRoute`; capability-
+  checked, RLS `for all`). Vehicle seat templates cascade; a vehicle/route still
+  referenced by schedules is blocked by the FK (restrict) and the action returns
+  a clear "in use" message instead of a raw error.
+- **ADR-0022 Bus-arrangement seat map** — the booking seat map renders seats at
+  their real row/column (column derived from the seat label letter) with a
+  centre aisle for 3+-across layouts, a FRONT/driver/door header, and a seat-icon
+  glyph per seat coloured by state. No schema change: column position is encoded
+  in the existing seat labels. A sample 2+2 coach departure was seeded for the
+  demo operator so the flow is bookable.
+
+## Wine primary rebrand
+
+- **ADR-0023 Wine primary** — the brand primary moved from amber to wine
+  (`--color-primary: #8c2743`) and the dark brand surface from navy to deep wine
+  (`--color-brand-ink: #3d1020`), keeping brushed gold as the accent (wine + gold
+  + cream). All surfaces consume tokens, so the swap propagated; the few
+  hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
+  the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
+  (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
+  rental-marketplace feel. (The rentallafrica.com reference could not be loaded
+  from the session — its host isn't in the allowed network — so the button feel
+  was interpreted from the brief.)
+
+## Logo + app-wide UI consistency
+
+- **ADR-0024 Wordmark logo** — the pin-icon mark was dropped; the logo is now
+  the "countribus" wordmark in bold sans (matching the supplied reference), with
+  "bus" in wine. On dark surfaces (hero/footer) "countri" is white and "bus"
+  uses a lighter wine (#e39bac) so it stays legible on deep wine.
+- **ADR-0025 One UI feel everywhere** — shared form-control styles
+  (`components/ui/field.ts`: rounded, hairline border, wine focus ring) replace
+  the per-form input strings across every form (auth, search, checkout,
+  schedules, fleet, profile, commission, seat editor). Every dashboard page now
+  uses the same header treatment (gold eyebrow + Fraunces display title) via
+  `DashboardHeader` (or the inline equivalent for dynamic titles), and auth
+  headings use the display font. Buttons (pill), cards and tokens were already
+  shared, so the app reads as one system.
+
+## Hero copy + admin-managed photo slider
+
+- **ADR-0026 Homepage hero slider** — the hero headline/subtext were updated and
+  the SVG scene is now a background photo slideshow when the admin has added
+  images (crossfade carousel with dots; falls back to the scene when empty).
+  `hero_images` holds the slides (public read of active rows — the policy checks
+  only `is_active` so the anonymous homepage read never calls a helper the anon
+  role can't execute; admins read/manage all). Images live in a public Storage
+  bucket `hero`; the admin's own session uploads them (Storage RLS limits writes
+  to platform admins — no service-role key needed). Managed at
+  /dashboard/homepage (admin only): upload, reorder, hide, delete. The landing
+  page is dynamic so new images appear without a redeploy. Server-action body
+  limit raised to 7 MB for uploads.
+
+## Homepage CMS
+
+- **ADR-0027 Homepage content is editable** — every homepage section is now
+  admin-editable from /dashboard/homepage: hero text, the photo slider, feature
+  cards, the how-it-works steps and the operator banner. Content lives in
+  `site_content` (one jsonb row per section, public read via a `true` policy,
+  admin-only writes) and is merged over built-in defaults
+  (`lib/content/homepage.ts`) by `getHomepageContent`, so the page renders
+  before any edit and never breaks if a row is missing a field. Card/step icons
+  are chosen from a fixed registry (icon name → lucide component). The landing
+  page is dynamic, so edits appear immediately (verified end-to-end: edited the
+  hero title in the dashboard → live homepage updated).

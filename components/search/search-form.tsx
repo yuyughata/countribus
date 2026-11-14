@@ -4,11 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { fieldClass as field } from "@/components/ui/field";
 
 type Opt = { id: string; label: string };
-
-const field =
-  "h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none";
 
 export function SearchForm({
   terminals,

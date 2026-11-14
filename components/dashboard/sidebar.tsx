@@ -64,7 +64,7 @@ export function SidebarNav({
 export function SidebarBrand() {
   return (
     <div className="flex items-center gap-2 px-5 py-5">
-      <Logo markClassName="size-6" className="text-base" />
+      <Logo className="text-xl" />
       <span className="bg-accent-soft text-accent-strong ring-accent/20 ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ring-1">
         Portal
       </span>

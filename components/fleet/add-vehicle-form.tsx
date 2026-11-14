@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/field";
 import { createVehicle } from "@/features/fleet/actions";
 
 export function AddVehicleForm({
@@ -23,8 +24,7 @@ export function AddVehicleForm({
     capacity: "30",
   });
 
-  const field =
-    "h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none";
+  const field = fieldClass;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();

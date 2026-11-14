@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/field";
 import type { ActionResult } from "@/features/auth/actions";
 
 type Field = {
@@ -42,7 +43,7 @@ export function AuthForm({
             autoComplete={f.autoComplete}
             placeholder={f.placeholder}
             required
-            className="border-border bg-surface text-foreground placeholder:text-subtle focus-visible:border-primary h-10 w-full rounded-md border px-3 text-sm focus-visible:outline-none"
+            className={fieldClass}
           />
         </div>
       ))}

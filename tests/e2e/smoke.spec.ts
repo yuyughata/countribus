@@ -2,9 +2,9 @@ import { expect, test } from "@playwright/test";
 
 test("landing page renders the hero and navigates to the dashboard", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("intercity journeys");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Intercity booking");
 
-  await page.getByRole("link", { name: "View dashboard" }).click();
+  await page.getByRole("link", { name: "Operator portal" }).click();
   await expect(page.getByRole("heading", { name: "Welcome back 👋" })).toBeVisible();
 });
 
