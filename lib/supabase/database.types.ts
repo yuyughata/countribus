@@ -1885,6 +1885,21 @@ export type Database = {
       }
       is_platform_admin: { Args: never; Returns: boolean }
       is_vendor_creator: { Args: { p_vendor: string }; Returns: boolean }
+      list_popular_routes: {
+        Args: { p_limit?: number }
+        Returns: {
+          available_seats: number
+          base_fare_kobo: number
+          departure_at: string
+          destination_city: string
+          destination_terminal: string
+          frequency: number
+          origin_city: string
+          origin_terminal: string
+          schedule_id: string
+          vendor_name: string
+        }[]
+      }
       promo_quote: {
         Args: { p_code: string; p_fare_kobo: number; p_user: string }
         Returns: {

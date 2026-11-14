@@ -17,6 +17,30 @@ export async function listTerminalOptionsPublic(): Promise<TerminalOption[]> {
   });
 }
 
+export type PopularRoute = {
+  schedule_id: string;
+  vendor_name: string;
+  origin_city: string;
+  destination_city: string;
+  origin_terminal: string;
+  destination_terminal: string;
+  departure_at: string;
+  base_fare_kobo: number | null;
+  available_seats: number;
+  frequency: number;
+};
+
+/**
+ * Popular routes for the homepage slider — one card per route (the soonest
+ * bookable upcoming departure), ordered by how frequently the corridor runs.
+ */
+export async function listPopularRoutes(limit = 8): Promise<PopularRoute[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("list_popular_routes", { p_limit: limit });
+  if (error) return [];
+  return (data ?? []) as PopularRoute[];
+}
+
 export type JourneyResult = {
   schedule_id: string;
   vendor_name: string;

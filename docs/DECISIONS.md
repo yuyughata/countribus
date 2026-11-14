@@ -322,3 +322,16 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   `publish_schedule` by setting the JWT to the demo Super Admin inside one
   transaction. The public header shows **My bookings** on every page for all
   visitors; when signed out, `/bookings` redirects to `/login?next=/bookings`.
+
+## Popular Routes
+
+- **ADR-0031 Homepage "Popular Routes" slider** — below the hero/search, the
+  homepage shows a horizontal slider of popular-route cards. `list_popular_routes`
+  (security definer) returns one card per corridor — the soonest upcoming
+  *bookable* departure — ordered by how frequently that corridor runs (its count
+  of upcoming published departures), so the cards are real and directly bookable.
+  Each card shows the route (city → city), fare per seat, date and time, and a
+  **Book now** button linking to /book/[schedule_id]. The slider is a scroll-snap
+  row with prev/next arrows on desktop and swipe on mobile; it renders nothing
+  when there is no inventory. Data-driven (not CMS-managed) so it always reflects
+  live availability.
