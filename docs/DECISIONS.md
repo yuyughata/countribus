@@ -243,3 +243,16 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   /dashboard/homepage (admin only): upload, reorder, hide, delete. The landing
   page is dynamic so new images appear without a redeploy. Server-action body
   limit raised to 7 MB for uploads.
+
+## Homepage CMS
+
+- **ADR-0027 Homepage content is editable** — every homepage section is now
+  admin-editable from /dashboard/homepage: hero text, the photo slider, feature
+  cards, the how-it-works steps and the operator banner. Content lives in
+  `site_content` (one jsonb row per section, public read via a `true` policy,
+  admin-only writes) and is merged over built-in defaults
+  (`lib/content/homepage.ts`) by `getHomepageContent`, so the page renders
+  before any edit and never breaks if a row is missing a field. Card/step icons
+  are chosen from a fixed registry (icon name → lucide component). The landing
+  page is dynamic, so edits appear immediately (verified end-to-end: edited the
+  hero title in the dashboard → live homepage updated).

@@ -33,7 +33,7 @@ export const primaryNav: NavItem[] = [
 ];
 
 export const secondaryNav: NavItem[] = [
-  { href: "/dashboard/homepage", label: "Homepage slider", icon: ImageIcon },
+  { href: "/dashboard/homepage", label: "Homepage content", icon: ImageIcon },
   { href: "/dashboard/activity", label: "Activity log", icon: ScrollText },
   { href: "/dashboard/permissions", label: "Admin & permissions", icon: Settings },
   { href: "/dashboard/settings", label: "Org settings", icon: Settings },
