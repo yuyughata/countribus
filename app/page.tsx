@@ -8,14 +8,14 @@ import { HeroScene } from "@/components/marketing/hero-scene";
 import { HeroSearch } from "@/components/marketing/hero-search";
 import { HeroCarousel } from "@/components/marketing/hero-carousel";
 import { PopularRoutes } from "@/components/marketing/popular-routes";
-import { listPopularRoutes, listTerminalOptionsPublic } from "@/features/search/queries";
+import { listBookableRoutes, listPopularRoutes } from "@/features/search/queries";
 import { listActiveHeroImages } from "@/features/hero/queries";
 import { getHomepageContent } from "@/features/content/queries";
 import { iconFor, DEFAULT_HOMEPAGE } from "@/lib/content/homepage";
 
 export default async function Home() {
-  const [terminals, heroImages, content, popularRoutes] = await Promise.all([
-    listTerminalOptionsPublic().catch(() => []),
+  const [routes, heroImages, content, popularRoutes] = await Promise.all([
+    listBookableRoutes().catch(() => ({ origins: [], destinationsByOrigin: {} })),
     listActiveHeroImages().catch(() => []),
     getHomepageContent().catch(() => DEFAULT_HOMEPAGE),
     listPopularRoutes(8).catch(() => []),
@@ -51,7 +51,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <HeroSearch terminals={terminals} />
+          <HeroSearch routes={routes} />
         </div>
       </section>
 

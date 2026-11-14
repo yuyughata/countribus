@@ -1,34 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { fieldClass as field } from "@/components/ui/field";
-
-type Opt = { id: string; label: string };
+import type { RouteOptions } from "@/features/search/queries";
 
 export function SearchForm({
-  terminals,
+  routes,
   initial,
 }: {
-  terminals: Opt[];
+  routes: RouteOptions;
   initial?: { origin?: string; dest?: string; date?: string; pax?: string; category?: string };
 }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
+
+  const origins = routes.origins;
+  // Resolve a valid starting origin (from the URL if it's still bookable).
+  const startOrigin =
+    initial?.origin && routes.destinationsByOrigin[initial.origin]
+      ? initial.origin
+      : (origins[0]?.id ?? "");
+  const startDests = routes.destinationsByOrigin[startOrigin] ?? [];
+  const startDest =
+    initial?.dest && startDests.some((d) => d.id === initial.dest)
+      ? initial.dest
+      : (startDests[0]?.id ?? "");
+
   const [f, setF] = useState({
-    origin: initial?.origin ?? terminals[0]?.id ?? "",
-    dest: initial?.dest ?? terminals[1]?.id ?? "",
+    origin: startOrigin,
+    dest: startDest,
     date: initial?.date ?? today,
     pax: initial?.pax ?? "1",
     category: initial?.category ?? "any",
   });
 
+  const destOptions = useMemo(
+    () => routes.destinationsByOrigin[f.origin] ?? [],
+    [routes, f.origin],
+  );
+
+  function chooseOrigin(origin: string) {
+    const dests = routes.destinationsByOrigin[origin] ?? [];
+    const dest = dests.some((d) => d.id === f.dest) ? f.dest : (dests[0]?.id ?? "");
+    setF({ ...f, origin, dest });
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!f.origin || !f.dest) return;
     const q = new URLSearchParams(f).toString();
     router.push(`/search?${q}`);
+  }
+
+  if (origins.length === 0) {
+    return (
+      <div className="border-border bg-surface text-muted rounded-xl border p-6 text-center text-sm shadow-[var(--shadow-card)]">
+        No trips are open for booking right now. Please check back soon.
+      </div>
+    );
   }
 
   return (
@@ -38,12 +70,8 @@ export function SearchForm({
     >
       <label className="text-muted space-y-1 text-xs font-medium">
         From
-        <select
-          className={field}
-          value={f.origin}
-          onChange={(e) => setF({ ...f, origin: e.target.value })}
-        >
-          {terminals.map((t) => (
+        <select className={field} value={f.origin} onChange={(e) => chooseOrigin(e.target.value)}>
+          {origins.map((t) => (
             <option key={t.id} value={t.id}>
               {t.label}
             </option>
@@ -57,7 +85,7 @@ export function SearchForm({
           value={f.dest}
           onChange={(e) => setF({ ...f, dest: e.target.value })}
         >
-          {terminals.map((t) => (
+          {destOptions.map((t) => (
             <option key={t.id} value={t.id}>
               {t.label}
             </option>

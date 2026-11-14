@@ -1885,6 +1885,15 @@ export type Database = {
       }
       is_platform_admin: { Args: never; Returns: boolean }
       is_vendor_creator: { Args: { p_vendor: string }; Returns: boolean }
+      list_bookable_routes: {
+        Args: never
+        Returns: {
+          dest_id: string
+          dest_label: string
+          origin_id: string
+          origin_label: string
+        }[]
+      }
       list_popular_routes: {
         Args: { p_limit?: number }
         Returns: {

@@ -9,7 +9,7 @@ import { SearchForm } from "@/components/search/search-form";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { formatKobo } from "@/lib/money";
 import {
-  listTerminalOptionsPublic,
+  listBookableRoutes,
   searchAlternativeJourneys,
   searchJourneys,
   type JourneyResult,
@@ -57,7 +57,7 @@ export default async function SearchPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const terminals = await listTerminalOptionsPublic();
+  const routes = await listBookableRoutes();
   const hasQuery = sp.origin && sp.dest && sp.date;
   const pax = Number(sp.pax ?? "1");
   const [results, alternatives] = hasQuery
@@ -93,7 +93,7 @@ export default async function SearchPage({
         </div>
 
         <SearchForm
-          terminals={terminals}
+          routes={routes}
           initial={{
             origin: sp.origin,
             dest: sp.dest,
