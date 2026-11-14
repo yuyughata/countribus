@@ -43,7 +43,7 @@ function JourneyCard({ r }: { r: JourneyResult }) {
         <p className="text-muted text-xs">{r.available_seats} seats left</p>
         <Link href={`/book/${r.schedule_id}`} className="mt-2 inline-block">
           <Button size="sm" className="gap-1">
-            Select seats <ArrowRight className="size-4" />
+            Book Now <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>
