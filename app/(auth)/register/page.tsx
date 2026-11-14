@@ -5,7 +5,13 @@ import { registerAction } from "@/features/auth/actions";
 
 export const metadata = { title: "Create account" };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string }>;
+}) {
+  const { ref } = await searchParams;
+  const referral = (ref ?? "").trim().toUpperCase().slice(0, 32);
   return (
     <div className="space-y-5">
       <div>
@@ -28,6 +34,14 @@ export default function RegisterPage() {
             placeholder: "0803 000 0000",
           },
           { name: "password", label: "Password", type: "password", autoComplete: "new-password" },
+          {
+            name: "referralCode",
+            label: "Referral code (optional)",
+            required: false,
+            defaultValue: referral,
+            placeholder: "Have a friend's code?",
+            hint: "Enter a friend's code and they'll earn a reward on your first trip.",
+          },
         ]}
       />
       <p className="text-muted text-center text-sm">

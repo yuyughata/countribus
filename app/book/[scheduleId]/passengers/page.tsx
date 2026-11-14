@@ -8,6 +8,7 @@ import { BookingSteps } from "@/components/booking/booking-steps";
 import { getAuthContext } from "@/lib/auth/context";
 import { formatKobo } from "@/lib/money";
 import { getScheduleForBooking, getSeatMap } from "@/features/booking/queries";
+import { getMyReferral } from "@/features/promotions/queries";
 
 export const metadata = { title: "Passenger details" };
 
@@ -23,6 +24,7 @@ export default async function PassengersPage({
   const schedule = await getScheduleForBooking(scheduleId);
   if (!schedule || schedule.status !== "published") notFound();
   const seats = await getSeatMap(scheduleId);
+  const myRef = await getMyReferral();
 
   return (
     <>
@@ -47,6 +49,7 @@ export default async function PassengersPage({
               scheduleId={scheduleId}
               seats={seats}
               fareKobo={schedule.base_fare_kobo ?? 0}
+              availableRewardPercent={myRef?.availableRewardPercent ?? null}
             />
           </CardContent>
         </Card>

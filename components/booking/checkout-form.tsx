@@ -8,6 +8,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fieldClass as field } from "@/components/ui/field";
 import { createBookingAndPay } from "@/features/booking/checkout";
+import { previewPromoCode } from "@/features/promotions/actions";
 import { formatKobo } from "@/lib/money";
 import {
   SEATED_TYPE_OPTIONS,
@@ -29,10 +30,12 @@ export function CheckoutForm({
   scheduleId,
   seats,
   fareKobo,
+  availableRewardPercent = null,
 }: {
   scheduleId: string;
   seats: SeatCell[];
   fareKobo: number;
+  availableRewardPercent?: number | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -40,6 +43,11 @@ export function CheckoutForm({
   const [hold, setHold] = useState<Hold | null>(null);
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [provider, setProvider] = useState<PaymentProvider>("paystack");
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; discountKobo: number } | null>(null);
+  const [promoMsg, setPromoMsg] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [useReward, setUseReward] = useState(false);
   const [pax, setPax] = useState<
     Record<string, { full_name: string; phone: string; type: SeatedType }>
   >({});
@@ -72,6 +80,34 @@ export function CheckoutForm({
   const typeOf = (id: string): SeatedType => pax[id]?.type ?? "adult";
   const total = hold.seatIds.reduce((s, id) => s + fareForSeatedType(typeOf(id), seatBase(id)), 0);
 
+  const rewardDiscount =
+    !promo && useReward && availableRewardPercent
+      ? Math.round((total * availableRewardPercent) / 100)
+      : 0;
+  const discount = promo ? Math.min(promo.discountKobo, total) : rewardDiscount;
+  const grandTotal = Math.max(0, total - discount);
+
+  async function applyPromo() {
+    const code = promoInput.trim();
+    if (!code) return;
+    setPromoMsg(null);
+    setChecking(true);
+    const r = await previewPromoCode(code, total);
+    setChecking(false);
+    if (r.ok) {
+      setPromo({ code, discountKobo: r.discountKobo });
+      setUseReward(false);
+    } else {
+      setPromo(null);
+      setPromoMsg(r.reason);
+    }
+  }
+  function removePromo() {
+    setPromo(null);
+    setPromoInput("");
+    setPromoMsg(null);
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -95,6 +131,8 @@ export function CheckoutForm({
         passengers,
         infants: cleanInfants,
         luggage,
+        promoCode: promo?.code,
+        useReferralReward: !promo && useReward,
       });
       if (!r.ok) {
         setError(r.error);
@@ -280,6 +318,61 @@ export function CheckoutForm({
         )}
       </section>
 
+      <section className="space-y-3">
+        <h3 className="text-foreground text-sm font-semibold">Promo code</h3>
+        {promo ? (
+          <div className="bg-success-soft text-success flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm">
+            <span>
+              <span className="font-semibold">{promo.code}</span> applied — you save{" "}
+              {formatKobo(discount)}
+            </span>
+            <button
+              type="button"
+              onClick={removePromo}
+              className="text-success/80 hover:text-success"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <div className="flex gap-2">
+              <input
+                className={`${field} uppercase`}
+                placeholder="Enter code"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={applyPromo}
+                disabled={checking || !promoInput.trim()}
+              >
+                {checking ? "Checking…" : "Apply"}
+              </Button>
+            </div>
+            {promoMsg && <p className="text-danger text-xs">{promoMsg}</p>}
+          </div>
+        )}
+
+        {availableRewardPercent != null && (
+          <label className="border-border bg-surface flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+            <span className="text-sm">
+              <span className="text-foreground font-medium">Use your referral reward</span>{" "}
+              <span className="text-muted">— {availableRewardPercent}% off this booking</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={!promo && useReward}
+              disabled={!!promo}
+              onChange={(e) => setUseReward(e.target.checked)}
+              className="size-5 accent-[var(--color-primary)]"
+            />
+          </label>
+        )}
+      </section>
+
       <section className="flex flex-wrap items-end justify-between gap-3">
         <label className="text-muted space-y-1 text-xs font-medium">
           Pay with
@@ -292,9 +385,19 @@ export function CheckoutForm({
             <option value="flutterwave">Flutterwave</option>
           </select>
         </label>
-        <div className="text-right">
+        <div className="space-y-0.5 text-right">
+          {discount > 0 && (
+            <>
+              <p className="text-muted text-sm">
+                Subtotal <span className="text-foreground">{formatKobo(total)}</span>
+              </p>
+              <p className="text-success text-sm">− {formatKobo(discount)} discount</p>
+            </>
+          )}
           <p className="text-muted text-sm">Total</p>
-          <p className="text-foreground font-display text-2xl font-semibold">{formatKobo(total)}</p>
+          <p className="text-foreground font-display text-2xl font-semibold">
+            {formatKobo(grandTotal)}
+          </p>
         </div>
       </section>
 
@@ -303,7 +406,7 @@ export function CheckoutForm({
       <Button type="submit" className="w-full" size="lg" disabled={pending}>
         {pending
           ? "Processing…"
-          : `Pay securely with ${provider === "paystack" ? "Paystack" : "Flutterwave"} · ${formatKobo(total)}`}
+          : `Pay securely with ${provider === "paystack" ? "Paystack" : "Flutterwave"} · ${formatKobo(grandTotal)}`}
       </Button>
     </form>
   );

@@ -279,3 +279,29 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   INSERT). Verified end-to-end: subscribe persists and is idempotent; signed-in
   nav shows Manage account + Sign out; /account renders and sign-out returns to
   /login.
+
+## Promotions & referrals
+
+- **ADR-0029 Promo codes & referral rewards** — admins create promo codes
+  (`promo_codes`: % discount with conditions — min fare, total/per-customer
+  redemption caps, optional max-discount cap, validity window, active flag) from
+  **/dashboard/promotions**. Every customer gets a shareable `referral_code`
+  (generated in `handle_new_user`, backfilled for existing profiles); a signup
+  carrying a code in its auth metadata records a `referrals` row (pending). The
+  admin configures a singleton `referral_program` (enabled, referrer %, min
+  qualifying fare, optional reward cap + validity). When a referred friend
+  completes their **first paid booking**, an `after update of status` trigger
+  (`on_booking_paid`) marks the referral qualified and grants the **referrer** a
+  `referral_rewards` credit (% off their own next booking). Discounts are always
+  recomputed server-side: `create_booking_from_hold` gained `p_promo_code` /
+  `p_use_referral_reward`, validates via `promo_quote` (raising `PROMO:<reason>`
+  on an invalid code) and writes `discount_kobo` + `grand_total_kobo`
+  (`declare_luggage` already nets the discount). A promo takes precedence over a
+  referral reward — never both on one booking. A referral reward is reserved on
+  the pending booking (`bookings.referral_reward_id`) but only **consumed when the
+  booking is paid**, so an abandoned checkout never burns it; usage caps count
+  bookings in `pending_payment`/`paid`, so expired/cancelled bookings free quota.
+  RLS: `promo_codes` is admin-only (customers use the `promo_quote` security-
+  definer function for a live quote); a user reads only their own referrals and
+  rewards. Validated end-to-end in `tests/db/phase9_promotions.sql` (25 checks)
+  and live (admin create, account referral card, register `?ref=` prefill).

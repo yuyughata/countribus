@@ -12,10 +12,19 @@ export type CheckoutInput = {
   holdToken: string;
   provider: PaymentProvider;
   contact: { name: string; phone: string; email?: string };
-  passengers: { seat_id: string; full_name: string; phone?: string; type: "adult" | "child_6_10" }[];
+  passengers: {
+    seat_id: string;
+    full_name: string;
+    phone?: string;
+    type: "adult" | "child_6_10";
+  }[];
   /** Lap infants (child 1–5): free, no seat. */
   infants?: { full_name: string }[];
   luggage?: { seat_id: string; type: string; quantity: number }[];
+  /** Optional promo code (recomputed + re-validated on the server). */
+  promoCode?: string;
+  /** Apply the caller's available referral reward (ignored if a promo is used). */
+  useReferralReward?: boolean;
 };
 
 export type CheckoutResult =
@@ -48,8 +57,14 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
     p_contact: input.contact,
     p_passengers: input.passengers,
     p_infants: infants,
+    p_promo_code: input.promoCode?.trim() || undefined,
+    p_use_referral_reward: input.useReferralReward ?? false,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // The RPC raises 'PROMO:<reason>' for an invalid code — surface it cleanly.
+    const m = /PROMO:(.+)/.exec(error.message);
+    return { ok: false, error: m ? m[1].trim() : error.message };
+  }
   const booking = (data as { booking_id: string; reference: string }[])[0];
   if (!booking) return { ok: false, error: "Could not create booking" };
 

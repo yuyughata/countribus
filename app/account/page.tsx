@@ -5,9 +5,11 @@ import { ArrowRight, LogOut, Ticket } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ReferralCard } from "@/components/account/referral-card";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { logoutAction } from "@/features/auth/actions";
 import { getAuthContext } from "@/lib/auth/context";
+import { getMyReferral } from "@/features/promotions/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Manage account" };
@@ -24,6 +26,7 @@ export default async function AccountPage() {
     .maybeSingle();
 
   const isOperator = ctx.isPlatformAdmin || ctx.memberships.length > 0;
+  const referral = await getMyReferral();
 
   return (
     <>
@@ -40,6 +43,8 @@ export default async function AccountPage() {
             Manage account
           </h1>
         </div>
+
+        {referral && <ReferralCard referral={referral} />}
 
         <Card className="p-6">
           <dl className="divide-border divide-y text-sm">
