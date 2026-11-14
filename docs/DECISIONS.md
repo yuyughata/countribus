@@ -207,13 +207,13 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 - **ADR-0023 Wine primary** — the brand primary moved from amber to wine
   (`--color-primary: #8c2743`) and the dark brand surface from navy to deep wine
   (`--color-brand-ink: #3d1020`), keeping brushed gold as the accent (wine + gold
-  + cream). All surfaces consume tokens, so the swap propagated; the few
-  hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
-  the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
-  (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
-  rental-marketplace feel. (The rentallafrica.com reference could not be loaded
-  from the session — its host isn't in the allowed network — so the button feel
-  was interpreted from the brief.)
+  - cream). All surfaces consume tokens, so the swap propagated; the few
+    hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
+    the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
+    (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
+    rental-marketplace feel. (The rentallafrica.com reference could not be loaded
+    from the session — its host isn't in the allowed network — so the button feel
+    was interpreted from the brief.)
 
 ## Logo + app-wide UI consistency
 
@@ -256,3 +256,82 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   are chosen from a fixed registry (icon name → lucide component). The landing
   page is dynamic, so edits appear immediately (verified end-to-end: edited the
   hero title in the dashboard → live homepage updated).
+
+## Account chrome & mailing list
+
+- **ADR-0028 Auth-aware public header, account page & mailing-list capture** —
+  the public `SiteHeader` is now a server component that resolves the signed-in
+  state once (`getAuthContext`, failing closed to logged-out) and hands it to an
+  interactive client `SiteNav`. Signed-out visitors get **Sign in** +
+  **Create an account**; signed-in users get **Manage account** and a
+  **Sign out** button. A new customer-facing `/account` page shows profile
+  details (name/email/phone), a link to My bookings (and the Operator portal
+  only when the user is an operator) and its own Sign out button — so customers
+  have a clear account hub with sign-out, distinct from the operator dashboard
+  topbar. A "Never miss an update" mailing-list form sits on the footer band
+  site-wide. Captures go to `newsletter_subscribers` (public INSERT, admin-only
+  SELECT/manage; email stored lower-cased with a unique constraint + a
+  `email = lower(email)` CHECK). The server action does a plain insert and
+  treats a unique-violation (23505) as success, so re-subscribing is idempotent
+  and never reveals list membership — a plain insert is used rather than
+  `on conflict do nothing` because anonymous visitors have INSERT but not SELECT
+  (the on-conflict path needs SELECT; the unique-violation path needs only
+  INSERT). Verified end-to-end: subscribe persists and is idempotent; signed-in
+  nav shows Manage account + Sign out; /account renders and sign-out returns to
+  /login.
+
+## Promotions & referrals
+
+- **ADR-0029 Promo codes & referral rewards** — admins create promo codes
+  (`promo_codes`: % discount with conditions — min fare, total/per-customer
+  redemption caps, optional max-discount cap, validity window, active flag) from
+  **/dashboard/promotions**. Every customer gets a shareable `referral_code`
+  (generated in `handle_new_user`, backfilled for existing profiles); a signup
+  carrying a code in its auth metadata records a `referrals` row (pending). The
+  admin configures a singleton `referral_program` (enabled, referrer %, min
+  qualifying fare, optional reward cap + validity). When a referred friend
+  completes their **first paid booking**, an `after update of status` trigger
+  (`on_booking_paid`) marks the referral qualified and grants the **referrer** a
+  `referral_rewards` credit (% off their own next booking). Discounts are always
+  recomputed server-side: `create_booking_from_hold` gained `p_promo_code` /
+  `p_use_referral_reward`, validates via `promo_quote` (raising `PROMO:<reason>`
+  on an invalid code) and writes `discount_kobo` + `grand_total_kobo`
+  (`declare_luggage` already nets the discount). A promo takes precedence over a
+  referral reward — never both on one booking. A referral reward is reserved on
+  the pending booking (`bookings.referral_reward_id`) but only **consumed when the
+  booking is paid**, so an abandoned checkout never burns it; usage caps count
+  bookings in `pending_payment`/`paid`, so expired/cancelled bookings free quota.
+  RLS: `promo_codes` is admin-only (customers use the `promo_quote` security-
+  definer function for a live quote); a user reads only their own referrals and
+  rewards. Validated end-to-end in `tests/db/phase9_promotions.sql` (25 checks)
+  and live (admin create, account referral card, register `?ref=` prefill).
+
+## Search alternatives, demo inventory & nav
+
+- **ADR-0030 "Other routes" + demo inventory + always-on My bookings** — the
+  Search page now shows the exact matches, then an **Other routes** section:
+  `search_alternative_journeys` (security definer) returns upcoming bookable
+  departures from the same origin terminal, same-destination other dates/times
+  first (direct alternatives), then other destinations from that origin, always
+  excluding the exact (origin, destination, date) already shown. (Terminals are
+  one-per-city in the demo data, so "closer" is same-corridor alternatives.)
+  `supabase/seed_demo_routes.sql` seeds 10 routes under the approved vendor
+  Chisco Express — each its own 40-seat 2+2 coach with a published layout and
+  three upcoming departures — so Search has live, bookable results; it is
+  idempotent (guarded by DEMO-R01..R10 registration numbers) and authorises
+  `publish_schedule` by setting the JWT to the demo Super Admin inside one
+  transaction. The public header shows **My bookings** on every page for all
+  visitors; when signed out, `/bookings` redirects to `/login?next=/bookings`.
+
+## Popular Routes
+
+- **ADR-0031 Homepage "Popular Routes" slider** — below the hero/search, the
+  homepage shows a horizontal slider of popular-route cards. `list_popular_routes`
+  (security definer) returns one card per corridor — the soonest upcoming
+  *bookable* departure — ordered by how frequently that corridor runs (its count
+  of upcoming published departures), so the cards are real and directly bookable.
+  Each card shows the route (city → city), fare per seat, date and time, and a
+  **Book now** button linking to /book/[schedule_id]. The slider is a scroll-snap
+  row with prev/next arrows on desktop and swipe on mobile; it renders nothing
+  when there is no inventory. Data-driven (not CMS-managed) so it always reflects
+  live availability.

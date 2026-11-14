@@ -7,16 +7,18 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/site-chrome";
 import { HeroScene } from "@/components/marketing/hero-scene";
 import { HeroSearch } from "@/components/marketing/hero-search";
 import { HeroCarousel } from "@/components/marketing/hero-carousel";
-import { listTerminalOptionsPublic } from "@/features/search/queries";
+import { PopularRoutes } from "@/components/marketing/popular-routes";
+import { listPopularRoutes, listTerminalOptionsPublic } from "@/features/search/queries";
 import { listActiveHeroImages } from "@/features/hero/queries";
 import { getHomepageContent } from "@/features/content/queries";
 import { iconFor, DEFAULT_HOMEPAGE } from "@/lib/content/homepage";
 
 export default async function Home() {
-  const [terminals, heroImages, content] = await Promise.all([
+  const [terminals, heroImages, content, popularRoutes] = await Promise.all([
     listTerminalOptionsPublic().catch(() => []),
     listActiveHeroImages().catch(() => []),
     getHomepageContent().catch(() => DEFAULT_HOMEPAGE),
+    listPopularRoutes(8).catch(() => []),
   ]);
   const { hero, features, how, operator } = content;
 
@@ -30,8 +32,8 @@ export default async function Home() {
           <HeroScene className="absolute inset-0 size-full" />
         )}
         {/* Legibility scrims (don't block the search widget) */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-ink/85 via-brand-ink/50 to-brand-ink/15" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-canvas to-transparent" />
+        <div className="from-brand-ink/85 via-brand-ink/50 to-brand-ink/15 pointer-events-none absolute inset-0 bg-gradient-to-br" />
+        <div className="from-canvas pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t to-transparent" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-5 pt-4 pb-14 sm:px-6 sm:pb-20">
           <SiteHeader tone="light" />
@@ -41,10 +43,10 @@ export default async function Home() {
               <span className="bg-accent size-1.5 rounded-full" />
               {hero.eyebrow}
             </span>
-            <h1 className="font-display mt-5 text-balance text-3xl leading-[1.08] font-semibold tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
+            <h1 className="font-display mt-5 text-3xl leading-[1.08] font-semibold tracking-tight text-balance text-white sm:text-5xl lg:text-[3.4rem]">
               {hero.title}
             </h1>
-            <p className="mt-4 max-w-xl text-pretty text-sm text-white/80 sm:text-base">
+            <p className="mt-4 max-w-xl text-sm text-pretty text-white/80 sm:text-base">
               {hero.subtitle}
             </p>
           </div>
@@ -52,6 +54,9 @@ export default async function Home() {
           <HeroSearch terminals={terminals} />
         </div>
       </section>
+
+      {/* ------------------------------------------------------- Popular Routes */}
+      <PopularRoutes routes={popularRoutes} />
 
       {/* ------------------------------------------------------------ Features */}
       <section className="mx-auto max-w-6xl px-6 py-20">
@@ -65,7 +70,7 @@ export default async function Home() {
             return (
               <div
                 key={idx}
-                className="group border-border bg-surface hover:shadow-[var(--shadow-lift)] rounded-xl border p-6 transition-shadow"
+                className="group border-border bg-surface rounded-xl border p-6 transition-shadow hover:shadow-[var(--shadow-lift)]"
               >
                 <span className="bg-accent-soft text-accent-strong ring-accent/20 flex size-11 items-center justify-center rounded-xl ring-1">
                   <Icon className="size-5" />
@@ -107,7 +112,7 @@ export default async function Home() {
 
       {/* ----------------------------------------------------------- Operator CTA */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="bg-ink-gradient shadow-[var(--shadow-lift)] relative overflow-hidden rounded-2xl px-8 py-14 text-white sm:px-14">
+        <div className="bg-ink-gradient relative overflow-hidden rounded-2xl px-8 py-14 text-white shadow-[var(--shadow-lift)] sm:px-14">
           <div className="pointer-events-none absolute -bottom-20 -left-10 size-72 rounded-full bg-[radial-gradient(circle,rgba(200,161,92,0.18),transparent_70%)]" />
           <div className="relative max-w-xl">
             <SectionEyebrow light>{operator.eyebrow}</SectionEyebrow>
@@ -140,7 +145,13 @@ export default async function Home() {
   );
 }
 
-function SectionEyebrow({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
+function SectionEyebrow({
+  children,
+  light = false,
+}: {
+  children: React.ReactNode;
+  light?: boolean;
+}) {
   return (
     <span className="inline-flex items-center gap-3">
       <span className="rule-gold" />

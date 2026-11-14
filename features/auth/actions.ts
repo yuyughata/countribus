@@ -21,12 +21,20 @@ export async function registerAction(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid details" };
   }
 
+  const referralCode =
+    ((formData.get("referralCode") as string | null) ?? "").trim().toUpperCase().slice(0, 32) ||
+    undefined;
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: { full_name: parsed.data.fullName, phone: parsed.data.phone },
+      data: {
+        full_name: parsed.data.fullName,
+        phone: parsed.data.phone,
+        ...(referralCode ? { referral_code: referralCode } : {}),
+      },
     },
   });
   if (error) return { ok: false, error: error.message };

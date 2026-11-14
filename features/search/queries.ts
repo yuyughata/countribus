@@ -17,6 +17,30 @@ export async function listTerminalOptionsPublic(): Promise<TerminalOption[]> {
   });
 }
 
+export type PopularRoute = {
+  schedule_id: string;
+  vendor_name: string;
+  origin_city: string;
+  destination_city: string;
+  origin_terminal: string;
+  destination_terminal: string;
+  departure_at: string;
+  base_fare_kobo: number | null;
+  available_seats: number;
+  frequency: number;
+};
+
+/**
+ * Popular routes for the homepage slider — one card per route (the soonest
+ * bookable upcoming departure), ordered by how frequently the corridor runs.
+ */
+export async function listPopularRoutes(limit = 8): Promise<PopularRoute[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("list_popular_routes", { p_limit: limit });
+  if (error) return [];
+  return (data ?? []) as PopularRoute[];
+}
+
 export type JourneyResult = {
   schedule_id: string;
   vendor_name: string;
@@ -43,6 +67,28 @@ export async function searchJourneys(params: {
     p_date: params.date,
     p_pax: params.pax,
     p_category: params.category && params.category !== "any" ? params.category : undefined,
+  });
+  if (error) return [];
+  return (data ?? []) as JourneyResult[];
+}
+
+/**
+ * "Other routes" shown below the exact results: upcoming bookable departures
+ * from the same origin (same-destination other dates first, then other
+ * destinations), excluding the exact (origin, destination, date) already shown.
+ */
+export async function searchAlternativeJourneys(params: {
+  origin: string;
+  dest: string;
+  date: string;
+  pax: number;
+}): Promise<JourneyResult[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("search_alternative_journeys", {
+    p_origin: params.origin,
+    p_dest: params.dest,
+    p_date: params.date,
+    p_pax: params.pax,
   });
   if (error) return [];
   return (data ?? []) as JourneyResult[];

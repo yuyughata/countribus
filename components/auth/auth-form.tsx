@@ -12,6 +12,9 @@ type Field = {
   type?: string;
   autoComplete?: string;
   placeholder?: string;
+  required?: boolean;
+  defaultValue?: string;
+  hint?: string;
 };
 
 export function AuthForm({
@@ -42,9 +45,11 @@ export function AuthForm({
             type={f.type ?? "text"}
             autoComplete={f.autoComplete}
             placeholder={f.placeholder}
-            required
+            defaultValue={f.defaultValue}
+            required={f.required !== false}
             className={fieldClass}
           />
+          {f.hint && <p className="text-subtle text-xs">{f.hint}</p>}
         </div>
       ))}
 

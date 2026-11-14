@@ -21,6 +21,12 @@ Supabase-managed `auth` schema and roles (`anon`, `authenticated`,
   and metrics authz — `admin_dashboard_metrics`/`admin_revenue_by_month`
   admin-only (no leak to non-admins), `vendor_dashboard_metrics` tenant-scoped
   (owner reads own vendor, blocked cross-tenant).
+- `phase9_promotions.sql` — promo codes & referrals: `promo_quote` validation
+  (percent, min-fare, inactive, expired, per-code/per-customer caps, max-discount
+  cap), the discount applied by `create_booking_from_hold`, referral attribution
+  on signup (metadata code), the referrer reward granted on the referee's first
+  paid booking and consumed on the referrer's own paid booking, and RLS negatives
+  (customers can't read `promo_codes` or others' `referral_rewards`).
 
 Each suite is **independent** and expects a FRESH database (harness + all
 migrations). Do not stack suites in one database — they reuse fixed IDs and

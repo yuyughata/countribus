@@ -1,104 +1,40 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 
-import { Menu, X } from "lucide-react";
-
 import { Logo, PoweredBy } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-const NAV: [string, string][] = [
-  ["Find a trip", "/search"],
-  ["My bookings", "/bookings"],
-];
+import { NewsletterForm } from "@/components/marketing/newsletter-form";
+import { SiteNav } from "@/components/marketing/site-nav";
+import { getAuthContext } from "@/lib/auth/context";
 
 /**
- * Public marketing chrome. `tone="light"` sits over the dark hero (white text);
- * `tone="ink"` is the solid light header used on interior public pages. Collapses
- * to a hamburger menu on phones.
+ * Public marketing header. Server component: resolves the signed-in state once
+ * and hands it to the interactive {@link SiteNav}. `tone="light"` sits over the
+ * dark hero; `tone="ink"` is the solid header on interior pages.
  */
-export function SiteHeader({ tone = "ink" }: { tone?: "ink" | "light" }) {
-  const light = tone === "light";
-  const [open, setOpen] = useState(false);
-
-  return (
-    <header
-      className={cn(
-        "relative z-40",
-        light
-          ? "flex items-center justify-between py-1"
-          : "border-border bg-surface/85 sticky top-0 flex items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-6",
-      )}
-    >
-      <Link href="/" aria-label="Countribus home" onClick={() => setOpen(false)}>
-        <Logo tone={light ? "light" : "ink"} />
-      </Link>
-
-      {/* Desktop nav */}
-      <nav className="hidden items-center gap-1 sm:flex sm:gap-2">
-        {NAV.map(([label, href]) => (
-          <Link key={href} href={href}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={light ? "text-white hover:bg-white/10" : ""}
-            >
-              {label}
-            </Button>
-          </Link>
-        ))}
-        <Link href="/dashboard">
-          <Button variant={light ? "accent" : "secondary"} size="sm">
-            Operator portal
-          </Button>
-        </Link>
-      </nav>
-
-      {/* Mobile toggle */}
-      <button
-        type="button"
-        aria-label={open ? "Close menu" : "Open menu"}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "flex size-10 items-center justify-center rounded-lg sm:hidden",
-          light ? "text-white hover:bg-white/10" : "text-foreground hover:bg-surface-muted",
-        )}
-      >
-        {open ? <X className="size-5" /> : <Menu className="size-5" />}
-      </button>
-
-      {/* Mobile menu panel */}
-      {open && (
-        <div className="absolute top-full right-0 left-0 mt-2 px-4 sm:hidden">
-          <div className="border-border bg-surface space-y-1 rounded-xl border p-2 shadow-[var(--shadow-pop)]">
-            {NAV.map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className="text-foreground hover:bg-surface-muted block rounded-lg px-3 py-2.5 text-sm font-medium"
-              >
-                {label}
-              </Link>
-            ))}
-            <Link href="/dashboard" onClick={() => setOpen(false)} className="block pt-1">
-              <Button variant="secondary" className="w-full">
-                Operator portal
-              </Button>
-            </Link>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+export async function SiteHeader({ tone = "ink" }: { tone?: "ink" | "light" }) {
+  const ctx = await getAuthContext().catch(() => null);
+  return <SiteNav tone={tone} signedIn={Boolean(ctx)} />;
 }
 
 export function SiteFooter() {
   return (
     <footer className="bg-ink-gradient mt-16 text-white sm:mt-20">
+      {/* Mailing-list capture band */}
+      <div className="border-b border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-12 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-md">
+            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+              Never miss an update
+            </h2>
+            <p className="mt-2 text-sm text-white/70">
+              Get latest on new routes, and amazing deals.
+            </p>
+          </div>
+          <div className="w-full max-w-md">
+            <NewsletterForm />
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 sm:py-14">
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="max-w-xs">
@@ -127,7 +63,7 @@ export function SiteFooter() {
               title="Account"
               links={[
                 ["Sign in", "/login"],
-                ["Register", "/register"],
+                ["Create an account", "/register"],
               ]}
             />
           </div>
