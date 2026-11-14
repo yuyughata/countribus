@@ -1,16 +1,22 @@
-import { Bell, LogOut, Search } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 
 import { MobileNav } from "@/components/dashboard/mobile-nav";
+import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 import { logoutAction } from "@/features/auth/actions";
+import type { InAppNotification } from "@/features/notifications/queries";
 
 export function Topbar({
   title,
   email,
   allowed,
+  notifications = [],
+  unread = 0,
 }: {
   title: string;
   email?: string | null;
   allowed?: string[];
+  notifications?: InAppNotification[];
+  unread?: number;
 }) {
   return (
     <header className="border-border bg-canvas flex h-16 items-center gap-3 border-b px-4 sm:gap-4 sm:px-5">
@@ -26,14 +32,7 @@ export function Topbar({
         />
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="border-border bg-surface text-muted hover:text-foreground relative flex size-9 items-center justify-center rounded-full border"
-        >
-          <Bell className="size-4" />
-          <span className="bg-danger absolute top-2 right-2.5 size-1.5 rounded-full" />
-        </button>
+        <NotificationsBell items={notifications} unread={unread} />
         {email && <span className="text-muted hidden text-sm sm:inline">{email}</span>}
         <div
           aria-hidden
