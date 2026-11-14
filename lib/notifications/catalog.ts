@@ -5,6 +5,7 @@ import {
   bookingConfirmationSms,
   departureReminderEmail,
   departureReminderSms,
+  partnerAgreementUpdatedEmail,
   payoutSentEmail,
   referralRewardEmail,
   vendorApprovedEmail,
@@ -138,6 +139,19 @@ export const TEMPLATE_CATALOG: TemplatePreview[] = [
     description: "Informs an applicant their application was declined.",
     trigger: "Admin declines application",
     email: vendorRejectedEmail({ vendorName: "Chisco Express", reason: "Incomplete documents" }),
+  },
+  {
+    key: "partner_agreement_updated",
+    name: "Partner Agreement updated",
+    category: "Operator",
+    channels: ["email", "whatsapp"],
+    description: "Asks operators to review and re-sign when the agreement changes.",
+    trigger: "Admin notifies operators of a new agreement version",
+    email: partnerAgreementUpdatedEmail({
+      vendorName: "Chisco Express",
+      version: 2,
+      agreementUrl: "https://countribus.app/dashboard/agreement",
+    }),
   },
   {
     key: "payout_sent",

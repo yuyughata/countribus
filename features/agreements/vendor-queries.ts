@@ -39,6 +39,38 @@ export async function getVendorAgreementState(vendorId: string): Promise<VendorA
   };
 }
 
+export type PartnerAnnounceState = {
+  current: AgreementVersion | null;
+  announcedAt: string | null; // when operators were last notified for this version
+  operatorCount: number; // approved operators
+  signedCount: number; // operators who have signed THIS version
+};
+
+/**
+ * Admin view of whether operators have been notified about the current Partner
+ * Agreement version, and how many have signed it. Used to drive the "Notify
+ * operators" control so we notify once per version instead of per clause edit.
+ */
+export async function getPartnerAnnounceState(): Promise<PartnerAnnounceState> {
+  const current = await getCurrentAgreement("partner");
+  if (!current) return { current: null, announcedAt: null, operatorCount: 0, signedCount: 0 };
+  const supabase = await createClient();
+  const [{ data: row }, { count: operatorCount }, { count: signedCount }] = await Promise.all([
+    supabase.from("agreements").select("announced_at").eq("id", current.id).maybeSingle(),
+    supabase.from("vendors").select("id", { count: "exact", head: true }).eq("status", "approved"),
+    supabase
+      .from("vendor_agreements")
+      .select("id", { count: "exact", head: true })
+      .eq("agreement_id", current.id),
+  ]);
+  return {
+    current,
+    announcedAt: (row as { announced_at: string | null } | null)?.announced_at ?? null,
+    operatorCount: operatorCount ?? 0,
+    signedCount: signedCount ?? 0,
+  };
+}
+
 export type PendingCountersignature = {
   id: string;
   vendor_id: string;

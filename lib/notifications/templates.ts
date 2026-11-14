@@ -247,6 +247,35 @@ export function vendorRejectedEmail(d: { vendorName: string; reason?: string }):
 }
 
 // ===========================================================================
+// Partner Agreement updated — operator must review & re-sign
+// ===========================================================================
+export function partnerAgreementUpdatedEmail(d: {
+  vendorName: string;
+  version: number;
+  agreementUrl: string;
+}): EmailMessage {
+  return {
+    subject: `Action needed: Countribus Partner Agreement updated (v${d.version})`,
+    text:
+      `${d.vendorName}: the Countribus Partner Agreement has been updated to version ${d.version}. ` +
+      `Please review the new terms and add your signature from your dashboard to keep your operator active. ${d.agreementUrl}`,
+    html: emailShell({
+      previewText: `The Partner Agreement has changed — please review and sign (v${d.version}).`,
+      heading: "Partner Agreement updated 📝",
+      intro: `Hello ${d.vendorName}, the Countribus Partner Agreement has been updated to version ${d.version}.`,
+      bodyHtml: `<p style="font-size:15px;line-height:1.55;color:#3d2a30">Please review the revised terms and add your signature from your dashboard. Your previous signature applied to an earlier version, so a fresh signature is required to keep your operator active.</p>`,
+      button: { label: "Review & sign", url: d.agreementUrl },
+      footerNote:
+        "If you've already signed version " + d.version + ", you can ignore this message.",
+    }),
+  };
+}
+
+export function partnerAgreementUpdatedSms(d: { version: number; agreementUrl: string }): string {
+  return `Countribus: our Partner Agreement has been updated (v${d.version}). Please review and sign in your dashboard to stay active: ${d.agreementUrl}`;
+}
+
+// ===========================================================================
 // Payout sent (vendor)
 // ===========================================================================
 export function payoutSentEmail(d: {
