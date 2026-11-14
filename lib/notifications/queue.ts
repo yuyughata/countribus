@@ -70,7 +70,16 @@ export async function notifyBookingConfirmed(admin: Admin, bookingId: string): P
 
     // --- Email ------------------------------------------------------------
     if (booking.contact_email) {
-      const msg = bookingConfirmationEmail(base);
+      // Attach the boarding policy the customer accepted (or the current one).
+      const { data: policy } = await admin
+        .from("agreements")
+        .select("content")
+        .eq("kind", "boarding")
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const boardingPolicy = (policy?.content ?? []) as { title: string; body: string }[];
+      const msg = bookingConfirmationEmail(base, boardingPolicy);
       const r = await sendEmail({
         to: booking.contact_email,
         subject: msg.subject,

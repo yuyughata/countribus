@@ -1,14 +1,17 @@
 import { ClauseEditor } from "@/components/dashboard/agreements/clause-editor";
+import { CountersignPanel } from "@/components/dashboard/agreements/countersign-panel";
 import { requireDashboardCapability } from "@/lib/auth/guard";
 import { getCurrentAgreement, listClauses } from "@/features/agreements/queries";
+import { listPendingCountersignatures } from "@/features/agreements/vendor-queries";
 
 export const metadata = { title: "Partner agreement" };
 
 export default async function PartnerAgreementPage() {
   await requireDashboardCapability("platform:manage");
-  const [clauses, current] = await Promise.all([
+  const [clauses, current, pending] = await Promise.all([
     listClauses("partner"),
     getCurrentAgreement("partner"),
+    listPendingCountersignatures(),
   ]);
   return (
     <div className="space-y-4">
@@ -25,6 +28,7 @@ export default async function PartnerAgreementPage() {
           </>
         )}
       </p>
+      <CountersignPanel pending={pending} />
       <ClauseEditor kind="partner" clauses={clauses} />
     </div>
   );

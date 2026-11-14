@@ -48,6 +48,7 @@ export function CheckoutForm({
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [useReward, setUseReward] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
   const [pax, setPax] = useState<
     Record<string, { full_name: string; phone: string; type: SeatedType }>
   >({});
@@ -133,6 +134,7 @@ export function CheckoutForm({
         luggage,
         promoCode: promo?.code,
         useReferralReward: !promo && useReward,
+        agreedTerms,
       });
       if (!r.ok) {
         setError(r.error);
@@ -401,9 +403,29 @@ export function CheckoutForm({
         </div>
       </section>
 
+      <label className="flex items-start gap-2.5 text-sm">
+        <input
+          type="checkbox"
+          checked={agreedTerms}
+          onChange={(e) => setAgreedTerms(e.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-[var(--color-primary)]"
+        />
+        <span className="text-muted">
+          I agree to the{" "}
+          <a href="/terms" target="_blank" className="text-primary font-medium">
+            Terms &amp; Conditions
+          </a>{" "}
+          and the{" "}
+          <a href="/boarding-policy" target="_blank" className="text-primary font-medium">
+            Boarding Policy
+          </a>
+          .
+        </span>
+      </label>
+
       {error && <p className="bg-danger-soft text-danger rounded-md px-3 py-2 text-sm">{error}</p>}
 
-      <Button type="submit" className="w-full" size="lg" disabled={pending}>
+      <Button type="submit" className="w-full" size="lg" disabled={pending || !agreedTerms}>
         {pending
           ? "Processing…"
           : `Pay securely with ${provider === "paystack" ? "Paystack" : "Flutterwave"} · ${formatKobo(grandTotal)}`}

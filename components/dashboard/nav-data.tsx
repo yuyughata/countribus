@@ -42,6 +42,7 @@ export const secondaryNav: NavItem[] = [
   { href: "/dashboard/agreements", label: "Agreements", icon: FileSignature },
   { href: "/dashboard/activity", label: "Activity log", icon: ScrollText },
   { href: "/dashboard/permissions", label: "Admin & permissions", icon: Settings },
+  { href: "/dashboard/agreement", label: "Partner agreement", icon: FileSignature },
   { href: "/dashboard/settings", label: "Org settings", icon: Settings },
   { href: "/dashboard/profile", label: "Personal profile", icon: UserCircle },
 ];

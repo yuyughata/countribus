@@ -1,5 +1,5 @@
 import { formatKobo } from "@/lib/money";
-import { emailShell } from "@/lib/notifications/email-layout";
+import { emailShell, esc } from "@/lib/notifications/email-layout";
 
 export type EmailMessage = { subject: string; html: string; text: string };
 
@@ -46,26 +46,63 @@ export function bookingConfirmationSms(
   ].join(" ");
 }
 
-export function bookingConfirmationEmail(d: BookingConfirmationData): EmailMessage {
+export type PolicyClause = { title: string; body: string };
+
+function boardingPolicyHtml(clauses: PolicyClause[]): string {
+  if (!clauses.length) return "";
+  const items = clauses
+    .map(
+      (c, i) =>
+        `<p style="margin:10px 0 2px;font-weight:600;font-size:13px;color:#2a0a15">${i + 1}. ${esc(c.title)}</p>` +
+        c.body
+          .split(/\n{2,}/)
+          .filter((p) => p.trim())
+          .map(
+            (p) =>
+              `<p style="margin:2px 0;font-size:12.5px;line-height:1.5;color:#5a4a50">${esc(p.trim())}</p>`,
+          )
+          .join(""),
+    )
+    .join("");
+  return `<div style="margin-top:22px;border-top:1px solid #efe6e9;padding-top:14px">
+    <p style="font-size:14px;font-weight:700;color:#8c2743;margin:0 0 4px">Boarding policy</p>
+    <p style="font-size:12.5px;color:#7a6a70;margin:0 0 6px">Please read before you travel.</p>
+    ${items}
+  </div>`;
+}
+
+function boardingPolicyText(clauses: PolicyClause[]): string {
+  if (!clauses.length) return "";
+  return (
+    "\n\n--- BOARDING POLICY ---\n" +
+    clauses.map((c, i) => `${i + 1}. ${c.title}\n${c.body.replace(/\n{2,}/g, "\n")}`).join("\n\n")
+  );
+}
+
+export function bookingConfirmationEmail(
+  d: BookingConfirmationData,
+  boardingPolicy: PolicyClause[] = [],
+): EmailMessage {
   const when = formatDeparture(d.departureAt);
   const total = formatKobo(d.grandTotalKobo);
   return {
     subject: `Booking confirmed — ${d.reference} (${d.originCity} → ${d.destinationCity})`,
-    text: [
-      `Hi ${d.contactName},`,
-      ``,
-      `Your payment is confirmed and your trip with ${d.vendorName} is booked.`,
-      ``,
-      `Reference: ${d.reference}`,
-      `Route: ${d.originCity} -> ${d.destinationCity}`,
-      `Departs: ${when}`,
-      `Passengers: ${d.passengerCount}`,
-      `Total paid: ${total}`,
-      ``,
-      `View and download your ticket(s): ${d.ticketUrl}`,
-      ``,
-      `Safe travels, Countribus`,
-    ].join("\n"),
+    text:
+      [
+        `Hi ${d.contactName},`,
+        ``,
+        `Your payment is confirmed and your trip with ${d.vendorName} is booked.`,
+        ``,
+        `Reference: ${d.reference}`,
+        `Route: ${d.originCity} -> ${d.destinationCity}`,
+        `Departs: ${when}`,
+        `Passengers: ${d.passengerCount}`,
+        `Total paid: ${total}`,
+        ``,
+        `View and download your ticket(s): ${d.ticketUrl}`,
+        ``,
+        `Safe travels, Countribus`,
+      ].join("\n") + boardingPolicyText(boardingPolicy),
     html: emailShell({
       previewText: `Your trip with ${d.vendorName} is booked`,
       heading: "Booking confirmed 🎉",
@@ -78,6 +115,7 @@ export function bookingConfirmationEmail(d: BookingConfirmationData): EmailMessa
         ["Total paid", total],
       ],
       button: { label: "View your ticket", url: d.ticketUrl },
+      appendHtml: boardingPolicyHtml(boardingPolicy),
       footerNote: "Please arrive at the terminal at least 30 minutes before departure.",
     }),
   };

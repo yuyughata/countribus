@@ -16,11 +16,17 @@ export type SendResult =
   | { ok: true; providerMessageId: string | null }
   | { ok: false; reason: string; configured: boolean };
 
+export interface EmailAttachment {
+  filename: string;
+  content: string; // base64
+}
+
 export interface EmailMessage {
   to: string;
   subject: string;
   html: string;
   text: string;
+  attachments?: EmailAttachment[];
 }
 
 export async function emailConfigured(): Promise<boolean> {
@@ -48,6 +54,7 @@ export async function sendEmail(msg: EmailMessage): Promise<SendResult> {
         subject: msg.subject,
         html: msg.html,
         text: msg.text,
+        ...(msg.attachments?.length ? { attachments: msg.attachments } : {}),
       }),
     });
     if (!res.ok) {

@@ -19,6 +19,7 @@ export function emailShell(opts: {
   rows?: [string, string][];
   bodyHtml?: string;
   button?: EmailButton;
+  appendHtml?: string;
   footerNote?: string;
 }): string {
   const preview = opts.previewText
@@ -52,6 +53,7 @@ export function emailShell(opts: {
       ${table}
       ${opts.bodyHtml ?? ""}
       ${button}
+      ${opts.appendHtml ?? ""}
       ${footerNote}
     </div>
     <p style="text-align:center;color:#9a8a90;font-size:12px;margin:16px 0 0">

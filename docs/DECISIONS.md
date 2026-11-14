@@ -386,3 +386,22 @@ Architecture Decision Record. Append new entries; don't rewrite history.
     + specific people, live recipient count, desktop/phone preview, save draft /
     send test / send. Campaigns persist in `email_campaigns` (admin-only RLS);
     `sendCampaign` resolves recipients and sends via Resend. Nav entry added.
+
+## Agreement signing & customer acceptance
+
+- **ADR-0035 E-signed Partner Agreement + customer Boarding Policy acceptance** —
+  operators review the current Partner Agreement in their dashboard
+  (/dashboard/agreement) and e-sign with a touch/mouse signature pad; the
+  signature (PNG data URL) is stored on `vendor_agreements`. A platform admin
+  counter-signs pending signatures from Agreements → Partner agreement. On
+  counter-signature the fully-signed PDF (pdf-lib, both signatures) is emailed to
+  the operator (Resend attachment) and is always downloadable at
+  `/api/agreements/[id]/pdf` (RLS-scoped). When the agreement is re-versioned,
+  the operator's acceptance no longer matches the current version and they're
+  shown "Action needed" to sign again. Customers accept the T&Cs + current
+  Boarding Policy via a required checkbox at checkout (enforced server-side);
+  acceptance is stamped on the booking (`terms_accepted_at`,
+  `boarding_agreement_id`). Public `/boarding-policy` and `/terms` pages render
+  the live policy, and the boarding policy is appended to every booking
+  confirmation email. Verified end-to-end (sign → counter-sign → PDF 200) and the
+  version-bump/dedup with a local DB test.

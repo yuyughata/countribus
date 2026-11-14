@@ -25,6 +25,8 @@ export type CheckoutInput = {
   promoCode?: string;
   /** Apply the caller's available referral reward (ignored if a promo is used). */
   useReferralReward?: boolean;
+  /** Customer agreed to the Terms & Conditions and Boarding Policy. Required. */
+  agreedTerms?: boolean;
 };
 
 export type CheckoutResult =
@@ -49,8 +51,19 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
   if (!input.contact.name.trim() || !input.contact.phone.trim()) {
     return { ok: false, error: "Enter booking contact details" };
   }
+  if (!input.agreedTerms) {
+    return { ok: false, error: "Please accept the Terms & Conditions and Boarding Policy" };
+  }
 
   const supabase = await createClient();
+  // Current boarding policy version to stamp on the booking as accepted.
+  const { data: boarding } = await supabase
+    .from("agreements")
+    .select("id")
+    .eq("kind", "boarding")
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   const { data, error } = await supabase.rpc("create_booking_from_hold", {
     p_schedule: input.scheduleId,
     p_hold_token: input.holdToken,
@@ -67,6 +80,15 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
   }
   const booking = (data as { booking_id: string; reference: string }[])[0];
   if (!booking) return { ok: false, error: "Could not create booking" };
+
+  // Record the customer's acceptance of the T&Cs + current Boarding Policy.
+  await supabase
+    .from("bookings")
+    .update({
+      terms_accepted_at: new Date().toISOString(),
+      boarding_agreement_id: boarding?.id ?? null,
+    })
+    .eq("id", booking.booking_id);
 
   // Declare luggage (prices into the booking total) before reading the total.
   const bags = (input.luggage ?? []).filter((l) => l.quantity > 0);
