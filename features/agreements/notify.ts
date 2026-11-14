@@ -97,7 +97,27 @@ export async function notifyOperatorsOfUpdate(): Promise<NotifyResult> {
   let skipped = 0;
   let failed = 0;
 
+  let inApp = 0;
+
   for (const r of recipients) {
+    // Always drop an in-app notification so it shows in their dashboard bell.
+    const { error: inAppErr } = await admin.from("notifications").insert({
+      user_id: r.userId,
+      booking_id: null,
+      channel: "in_app",
+      template: "partner_agreement_updated",
+      recipient: null,
+      payload: {
+        title: "Partner Agreement updated",
+        body: `Version ${current.version} needs your review and signature.`,
+        href: "/dashboard/agreement",
+        agreement_version: current.version,
+      },
+      status: "sent",
+      sent_at: new Date().toISOString(),
+    });
+    if (!inAppErr) inApp++;
+
     if (r.email) {
       const msg = partnerAgreementUpdatedEmail({
         vendorName: r.vendorName,
@@ -124,9 +144,14 @@ export async function notifyOperatorsOfUpdate(): Promise<NotifyResult> {
 
   await markAnnounced(admin, current.id);
   revalidatePath("/dashboard/agreements/partner");
+  revalidatePath("/dashboard");
 
-  const parts = [`${emailsSent} email(s)`, `${waSent} WhatsApp message(s)`];
-  let message = `Notified ${recipients.length} operator contact(s): ${parts.join(" and ")} sent.`;
+  const parts = [
+    `${emailsSent} email(s)`,
+    `${waSent} WhatsApp message(s)`,
+    `${inApp} in-app alert(s)`,
+  ];
+  let message = `Notified ${recipients.length} operator contact(s): ${parts.join(", ")} sent.`;
   if (skipped > 0) message += ` ${skipped} skipped (channel not configured).`;
   if (failed > 0) message += ` ${failed} failed to send.`;
   return { ok: true, message };

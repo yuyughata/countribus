@@ -902,6 +902,7 @@ export type Database = {
           id: string;
           payload: Json;
           provider_message_id: string | null;
+          read_at: string | null;
           recipient: string | null;
           sent_at: string | null;
           status: string;
@@ -916,6 +917,7 @@ export type Database = {
           id?: string;
           payload?: Json;
           provider_message_id?: string | null;
+          read_at?: string | null;
           recipient?: string | null;
           sent_at?: string | null;
           status?: string;
@@ -930,6 +932,7 @@ export type Database = {
           id?: string;
           payload?: Json;
           provider_message_id?: string | null;
+          read_at?: string | null;
           recipient?: string | null;
           sent_at?: string | null;
           status?: string;
