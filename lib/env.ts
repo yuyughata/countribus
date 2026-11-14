@@ -28,6 +28,8 @@ const serverSchema = z.object({
   // when absent, confirmation emails are recorded as `skipped`, never failed.
   RESEND_API_KEY: z.string().optional(),
   NOTIFICATIONS_FROM_EMAIL: z.string().email().optional(),
+  // Shared secret a scheduler presents to POST /api/payouts/run (bearer token).
+  PAYOUTS_CRON_SECRET: z.string().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
@@ -62,6 +64,7 @@ export function serverEnv(): ServerEnv {
     FLUTTERWAVE_WEBHOOK_HASH: process.env.FLUTTERWAVE_WEBHOOK_HASH,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     NOTIFICATIONS_FROM_EMAIL: process.env.NOTIFICATIONS_FROM_EMAIL,
+    PAYOUTS_CRON_SECRET: process.env.PAYOUTS_CRON_SECRET,
   });
   return _server;
 }

@@ -368,6 +368,120 @@ export type Database = {
           },
         ]
       }
+      communication_settings: {
+        Row: {
+          email_enabled: boolean
+          email_from: string | null
+          email_from_name: string | null
+          id: boolean
+          resend_api_key: string | null
+          sms_enabled: boolean
+          twilio_account_sid: string | null
+          twilio_auth_token: string | null
+          twilio_from: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp_enabled: boolean
+          whatsapp_phone_id: string | null
+          whatsapp_token: string | null
+        }
+        Insert: {
+          email_enabled?: boolean
+          email_from?: string | null
+          email_from_name?: string | null
+          id?: boolean
+          resend_api_key?: string | null
+          sms_enabled?: boolean
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_from?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_phone_id?: string | null
+          whatsapp_token?: string | null
+        }
+        Update: {
+          email_enabled?: boolean
+          email_from?: string | null
+          email_from_name?: string | null
+          id?: boolean
+          resend_api_key?: string | null
+          sms_enabled?: boolean
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_from?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_phone_id?: string | null
+          whatsapp_token?: string | null
+        }
+        Relationships: []
+      }
+      email_campaigns: {
+        Row: {
+          audiences: string[]
+          body_html: string
+          button_text: string | null
+          button_url: string | null
+          created_at: string
+          created_by: string | null
+          extra_recipients: string[]
+          footer_image_url: string | null
+          header_image_url: string | null
+          id: string
+          preview_text: string | null
+          recipient_count: number | null
+          sent_at: string | null
+          sent_count: number | null
+          status: Database["public"]["Enums"]["email_campaign_status"]
+          subject: string
+          type: Database["public"]["Enums"]["email_campaign_type"]
+          updated_at: string
+        }
+        Insert: {
+          audiences?: string[]
+          body_html?: string
+          button_text?: string | null
+          button_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          extra_recipients?: string[]
+          footer_image_url?: string | null
+          header_image_url?: string | null
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["email_campaign_status"]
+          subject?: string
+          type?: Database["public"]["Enums"]["email_campaign_type"]
+          updated_at?: string
+        }
+        Update: {
+          audiences?: string[]
+          body_html?: string
+          button_text?: string | null
+          button_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          extra_recipients?: string[]
+          footer_image_url?: string | null
+          header_image_url?: string | null
+          id?: string
+          preview_text?: string | null
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["email_campaign_status"]
+          subject?: string
+          type?: Database["public"]["Enums"]["email_campaign_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       financial_ledger: {
         Row: {
           amount_kobo: number
@@ -376,6 +490,7 @@ export type Database = {
           currency: string
           entry_type: Database["public"]["Enums"]["ledger_entry_type"]
           id: string
+          payout_id: string | null
           related_entry_id: string | null
           vendor_id: string
         }
@@ -386,6 +501,7 @@ export type Database = {
           currency?: string
           entry_type: Database["public"]["Enums"]["ledger_entry_type"]
           id?: string
+          payout_id?: string | null
           related_entry_id?: string | null
           vendor_id: string
         }
@@ -396,6 +512,7 @@ export type Database = {
           currency?: string
           entry_type?: Database["public"]["Enums"]["ledger_entry_type"]
           id?: string
+          payout_id?: string | null
           related_entry_id?: string | null
           vendor_id?: string
         }
@@ -405,6 +522,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_ledger_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
             referencedColumns: ["id"]
           },
           {
@@ -827,6 +951,59 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount_kobo: number
+          created_at: string
+          currency: string
+          entry_count: number
+          failure_reason: string | null
+          id: string
+          paystack_reference: string | null
+          paystack_transfer_code: string | null
+          processed_at: string | null
+          scheduled_for: string
+          status: Database["public"]["Enums"]["payout_status"]
+          vendor_id: string
+        }
+        Insert: {
+          amount_kobo: number
+          created_at?: string
+          currency?: string
+          entry_count?: number
+          failure_reason?: string | null
+          id?: string
+          paystack_reference?: string | null
+          paystack_transfer_code?: string | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          vendor_id: string
+        }
+        Update: {
+          amount_kobo?: number
+          created_at?: string
+          currency?: string
+          entry_count?: number
+          failure_reason?: string | null
+          id?: string
+          paystack_reference?: string | null
+          paystack_transfer_code?: string | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -1694,6 +1871,56 @@ export type Database = {
           },
         ]
       }
+      vendor_payout_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          currency: string
+          is_verified: boolean
+          paystack_recipient_code: string | null
+          updated_at: string
+          updated_by: string | null
+          vendor_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          currency?: string
+          is_verified?: boolean
+          paystack_recipient_code?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vendor_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          currency?: string
+          is_verified?: boolean
+          paystack_recipient_code?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payout_accounts_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_staff: {
         Row: {
           assigned_terminal_id: string | null
@@ -1909,6 +2136,15 @@ export type Database = {
           vendor_name: string
         }[]
       }
+      process_due_payouts: {
+        Args: { p_hold_minutes?: number }
+        Returns: {
+          amount_kobo: number
+          entry_count: number
+          payout_id: string
+          vendor_id: string
+        }[]
+      }
       promo_quote: {
         Args: { p_code: string; p_fare_kobo: number; p_user: string }
         Returns: {
@@ -2019,6 +2255,12 @@ export type Database = {
         | "refunded"
         | "expired"
       commission_basis: "base_fare" | "fare_plus_fees"
+      email_campaign_status: "draft" | "sending" | "sent" | "failed"
+      email_campaign_type:
+        | "newsletter"
+        | "promotion"
+        | "announcement"
+        | "service_update"
       ledger_entry_type:
         | "booking_gross"
         | "platform_commission"
@@ -2050,6 +2292,12 @@ export type Database = {
         | "success"
         | "failed"
         | "abandoned"
+      payout_status:
+        | "scheduled"
+        | "processing"
+        | "paid"
+        | "failed"
+        | "cancelled"
       schedule_status:
         | "draft"
         | "published"
@@ -2214,6 +2462,13 @@ export const Constants = {
         "expired",
       ],
       commission_basis: ["base_fare", "fare_plus_fees"],
+      email_campaign_status: ["draft", "sending", "sent", "failed"],
+      email_campaign_type: [
+        "newsletter",
+        "promotion",
+        "announcement",
+        "service_update",
+      ],
       ledger_entry_type: [
         "booking_gross",
         "platform_commission",
@@ -2249,6 +2504,7 @@ export const Constants = {
         "failed",
         "abandoned",
       ],
+      payout_status: ["scheduled", "processing", "paid", "failed", "cancelled"],
       schedule_status: [
         "draft",
         "published",

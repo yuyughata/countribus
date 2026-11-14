@@ -347,3 +347,20 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   stops customers choosing a pair that returns an empty search. The forms degrade
   gracefully to a "No trips open right now" message when there is no inventory.
   Replaces the previous `listTerminalOptionsPublic` feed into the search forms.
+
+## Vendor payouts (Paystack)
+
+- **ADR-0033 Automatic vendor settlement via Paystack transfers** — vendors add a
+  bank account under Org settings → Payout account (`vendor_payout_accounts`;
+  when Paystack is configured the number is resolved and a transfer recipient is
+  created, marking it verified). Paid bookings post `vendor_net` to the ledger;
+  `process_due_payouts` (security definer, admin/service-role) sweeps unsettled
+  `vendor_net` for vendors with a verified account into one `payouts` row each and
+  links the ledger entries (idempotent — `financial_ledger.payout_id` prevents
+  double-pay). The engine (`lib/payments/run-payouts.ts`) then pushes each
+  scheduled payout to Paystack Transfers. It runs from the Finance page ("Run
+  payouts now", admin) and from `POST /api/payouts/run` (bearer `PAYOUTS_CRON_SECRET`),
+  which a scheduler calls hourly so vendors are paid within 24h. Without Paystack
+  keys the framework still records accounts and schedules payouts (not sent).
+  RLS: a vendor reads only their own account/payouts; admins all. Validated in
+  `tests/db/phase10_payouts.sql` (11 checks).

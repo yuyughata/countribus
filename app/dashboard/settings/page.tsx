@@ -2,9 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardHeader } from "@/components/dashboard/page-header";
 import { CommissionForm } from "@/components/dashboard/commission-form";
+import { PayoutAccountForm } from "@/components/dashboard/payout-account-form";
 import { requireDashboardCapability } from "@/lib/auth/guard";
 import { firstManageableVendorId } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
+import { getVendorPayoutAccount } from "@/features/payouts/queries";
+import { listBanks } from "@/lib/payments/paystack-transfers";
 
 export const metadata = { title: "Org settings" };
 
@@ -40,7 +43,11 @@ export default async function SettingsPage() {
     const commissionPercent = await currentPlatformCommissionPercent();
     return (
       <div className="space-y-5 p-5">
-        <DashboardHeader eyebrow="Configuration" title="Platform settings" subtitle="Marketplace-wide configuration." />
+        <DashboardHeader
+          eyebrow="Configuration"
+          title="Platform settings"
+          subtitle="Marketplace-wide configuration."
+        />
 
         <Card>
           <CardHeader>
@@ -72,13 +79,15 @@ export default async function SettingsPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: v }, commissionPercent] = await Promise.all([
+  const [{ data: v }, commissionPercent, payoutAccount, banks] = await Promise.all([
     supabase
       .from("vendors")
       .select("name, slug, status, contact_email, contact_phone, created_at")
       .eq("id", vendorId)
       .maybeSingle(),
     currentPlatformCommissionPercent(),
+    getVendorPayoutAccount(vendorId),
+    listBanks(),
   ]);
 
   const tone =
@@ -107,6 +116,20 @@ export default async function SettingsPage() {
             label="Member since"
             value={v?.created_at ? new Date(v.created_at).toLocaleDateString("en-NG") : "—"}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Payout account</CardTitle>
+          <Badge tone="neutral">Settlement</Badge>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted mb-4 text-sm">
+            Where Countribus settles your earnings. Paid bookings are paid out to this account
+            automatically, within 24 hours, via Paystack.
+          </p>
+          <PayoutAccountForm banks={banks} initial={payoutAccount} />
         </CardContent>
       </Card>
 
