@@ -21,13 +21,12 @@ export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; si
   const light = tone === "light";
   const [open, setOpen] = useState(false);
 
-  // Shared text links (left of the account actions).
-  const links: [string, string][] = signedIn
-    ? [
-        ["Find a trip", "/search"],
-        ["My bookings", "/bookings"],
-      ]
-    : [["Find a trip", "/search"]];
+  // Shared text links (left of the account actions). "My bookings" always
+  // shows — when signed out, /bookings redirects to the sign-in page.
+  const links: [string, string][] = [
+    ["Find a trip", "/search"],
+    ["My bookings", "/bookings"],
+  ];
 
   return (
     <header

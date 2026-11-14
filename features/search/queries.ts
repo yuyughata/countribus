@@ -47,3 +47,25 @@ export async function searchJourneys(params: {
   if (error) return [];
   return (data ?? []) as JourneyResult[];
 }
+
+/**
+ * "Other routes" shown below the exact results: upcoming bookable departures
+ * from the same origin (same-destination other dates first, then other
+ * destinations), excluding the exact (origin, destination, date) already shown.
+ */
+export async function searchAlternativeJourneys(params: {
+  origin: string;
+  dest: string;
+  date: string;
+  pax: number;
+}): Promise<JourneyResult[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("search_alternative_journeys", {
+    p_origin: params.origin,
+    p_dest: params.dest,
+    p_date: params.date,
+    p_pax: params.pax,
+  });
+  if (error) return [];
+  return (data ?? []) as JourneyResult[];
+}

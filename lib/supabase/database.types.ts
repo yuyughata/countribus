@@ -1926,6 +1926,26 @@ export type Database = {
       }
       schedule_public: { Args: { p_schedule: string }; Returns: boolean }
       schedule_vendor: { Args: { p_schedule: string }; Returns: string }
+      search_alternative_journeys: {
+        Args: {
+          p_date: string
+          p_dest: string
+          p_limit?: number
+          p_origin: string
+          p_pax?: number
+        }
+        Returns: {
+          arrival_estimate_at: string
+          available_seats: number
+          base_fare_kobo: number
+          category_key: string
+          departure_at: string
+          destination_name: string
+          origin_name: string
+          schedule_id: string
+          vendor_name: string
+        }[]
+      }
       search_journeys: {
         Args: {
           p_category?: string

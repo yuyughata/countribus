@@ -305,3 +305,20 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   definer function for a live quote); a user reads only their own referrals and
   rewards. Validated end-to-end in `tests/db/phase9_promotions.sql` (25 checks)
   and live (admin create, account referral card, register `?ref=` prefill).
+
+## Search alternatives, demo inventory & nav
+
+- **ADR-0030 "Other routes" + demo inventory + always-on My bookings** — the
+  Search page now shows the exact matches, then an **Other routes** section:
+  `search_alternative_journeys` (security definer) returns upcoming bookable
+  departures from the same origin terminal, same-destination other dates/times
+  first (direct alternatives), then other destinations from that origin, always
+  excluding the exact (origin, destination, date) already shown. (Terminals are
+  one-per-city in the demo data, so "closer" is same-corridor alternatives.)
+  `supabase/seed_demo_routes.sql` seeds 10 routes under the approved vendor
+  Chisco Express — each its own 40-seat 2+2 coach with a published layout and
+  three upcoming departures — so Search has live, bookable results; it is
+  idempotent (guarded by DEMO-R01..R10 registration numbers) and authorises
+  `publish_schedule` by setting the JWT to the demo Super Admin inside one
+  transaction. The public header shows **My bookings** on every page for all
+  visitors; when signed out, `/bookings` redirects to `/login?next=/bookings`.
