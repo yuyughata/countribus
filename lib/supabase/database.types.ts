@@ -1,7 +1,3 @@
-/**
- * Supabase database types — generated from the live `countribus` project.
- * Regenerate with `pnpm run gen:types` after each migration.
- */
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -12,42 +8,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      site_content: {
-        Row: { key: string; value: Json; updated_at: string };
-        Insert: { key: string; value?: Json; updated_at?: string };
-        Update: { key?: string; value?: Json; updated_at?: string };
-        Relationships: [];
-      };
-      hero_images: {
-        Row: {
-          id: string;
-          storage_path: string | null;
-          url: string;
-          caption: string | null;
-          sort_order: number;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          storage_path?: string | null;
-          url: string;
-          caption?: string | null;
-          sort_order?: number;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          storage_path?: string | null;
-          url?: string;
-          caption?: string | null;
-          sort_order?: number;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
       audit_logs: {
         Row: {
           action: string;
@@ -437,6 +397,36 @@ export type Database = {
           },
         ];
       };
+      hero_images: {
+        Row: {
+          caption: string | null;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          sort_order: number;
+          storage_path: string | null;
+          url: string;
+        };
+        Insert: {
+          caption?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          sort_order?: number;
+          storage_path?: string | null;
+          url: string;
+        };
+        Update: {
+          caption?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          sort_order?: number;
+          storage_path?: string | null;
+          url?: string;
+        };
+        Relationships: [];
+      };
       location_aliases: {
         Row: {
           alias: string;
@@ -631,6 +621,30 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      newsletter_subscribers: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          is_active: boolean;
+          source: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          is_active?: boolean;
+          source?: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          is_active?: boolean;
+          source?: string;
+        };
+        Relationships: [];
       };
       notification_preferences: {
         Row: {
@@ -1178,6 +1192,24 @@ export type Database = {
           },
         ];
       };
+      site_content: {
+        Row: {
+          key: string;
+          updated_at: string;
+          value: Json;
+        };
+        Insert: {
+          key: string;
+          updated_at?: string;
+          value?: Json;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          value?: Json;
+        };
+        Relationships: [];
+      };
       states: {
         Row: {
           code: string;
@@ -1670,22 +1702,19 @@ export type Database = {
         }[];
       };
       seat_template_vendor: { Args: { p_template: string }; Returns: string };
+      set_platform_commission: { Args: { p_bps: number }; Returns: number };
       vendor_dashboard_metrics: {
         Args: { p_from?: string; p_to?: string; p_vendor: string };
         Returns: Json;
       };
-      set_platform_commission: {
-        Args: { p_bps: number };
-        Returns: number;
-      };
       vendor_staff_list: {
         Args: { p_vendor: string };
         Returns: {
-          user_id: string;
-          full_name: string | null;
-          email: string | null;
-          role: Database["public"]["Enums"]["vendor_role"];
+          email: string;
+          full_name: string;
           is_active: boolean;
+          role: Database["public"]["Enums"]["vendor_role"];
+          user_id: string;
         }[];
       };
       verify_ticket: { Args: { p_qr_token: string }; Returns: Json };

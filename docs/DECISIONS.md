@@ -207,13 +207,13 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 - **ADR-0023 Wine primary** — the brand primary moved from amber to wine
   (`--color-primary: #8c2743`) and the dark brand surface from navy to deep wine
   (`--color-brand-ink: #3d1020`), keeping brushed gold as the accent (wine + gold
-  + cream). All surfaces consume tokens, so the swap propagated; the few
-  hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
-  the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
-  (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
-  rental-marketplace feel. (The rentallafrica.com reference could not be loaded
-  from the session — its host isn't in the allowed network — so the button feel
-  was interpreted from the brief.)
+  - cream). All surfaces consume tokens, so the swap propagated; the few
+    hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
+    the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
+    (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
+    rental-marketplace feel. (The rentallafrica.com reference could not be loaded
+    from the session — its host isn't in the allowed network — so the button feel
+    was interpreted from the brief.)
 
 ## Logo + app-wide UI consistency
 
@@ -256,3 +256,26 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   are chosen from a fixed registry (icon name → lucide component). The landing
   page is dynamic, so edits appear immediately (verified end-to-end: edited the
   hero title in the dashboard → live homepage updated).
+
+## Account chrome & mailing list
+
+- **ADR-0028 Auth-aware public header, account page & mailing-list capture** —
+  the public `SiteHeader` is now a server component that resolves the signed-in
+  state once (`getAuthContext`, failing closed to logged-out) and hands it to an
+  interactive client `SiteNav`. Signed-out visitors get **Sign in** +
+  **Create an account**; signed-in users get **Manage account** and a
+  **Sign out** button. A new customer-facing `/account` page shows profile
+  details (name/email/phone), a link to My bookings (and the Operator portal
+  only when the user is an operator) and its own Sign out button — so customers
+  have a clear account hub with sign-out, distinct from the operator dashboard
+  topbar. A "Never miss an update" mailing-list form sits on the footer band
+  site-wide. Captures go to `newsletter_subscribers` (public INSERT, admin-only
+  SELECT/manage; email stored lower-cased with a unique constraint + a
+  `email = lower(email)` CHECK). The server action does a plain insert and
+  treats a unique-violation (23505) as success, so re-subscribing is idempotent
+  and never reveals list membership — a plain insert is used rather than
+  `on conflict do nothing` because anonymous visitors have INSERT but not SELECT
+  (the on-conflict path needs SELECT; the unique-violation path needs only
+  INSERT). Verified end-to-end: subscribe persists and is idempotent; signed-in
+  nav shows Manage account + Sign out; /account renders and sign-out returns to
+  /login.
