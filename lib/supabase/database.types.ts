@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      agreement_clauses: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          kind: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          kind: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          kind?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agreements: {
+        Row: {
+          content: Json
+          content_hash: string
+          id: string
+          kind: string
+          published_at: string
+          published_by: string | null
+          version: number
+        }
+        Insert: {
+          content: Json
+          content_hash: string
+          id?: string
+          kind: string
+          published_at?: string
+          published_by?: string | null
+          version: number
+        }
+        Update: {
+          content?: Json
+          content_hash?: string
+          id?: string
+          kind?: string
+          published_at?: string
+          published_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -205,6 +268,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          boarding_agreement_id: string | null
           contact_email: string | null
           contact_name: string
           contact_phone: string
@@ -222,11 +286,13 @@ export type Database = {
           referral_reward_id: string | null
           schedule_id: string
           status: Database["public"]["Enums"]["booking_status"]
+          terms_accepted_at: string | null
           total_fare_kobo: number
           updated_at: string
           vendor_id: string
         }
         Insert: {
+          boarding_agreement_id?: string | null
           contact_email?: string | null
           contact_name: string
           contact_phone: string
@@ -244,11 +310,13 @@ export type Database = {
           referral_reward_id?: string | null
           schedule_id: string
           status?: Database["public"]["Enums"]["booking_status"]
+          terms_accepted_at?: string | null
           total_fare_kobo: number
           updated_at?: string
           vendor_id: string
         }
         Update: {
+          boarding_agreement_id?: string | null
           contact_email?: string | null
           contact_name?: string
           contact_phone?: string
@@ -266,11 +334,19 @@ export type Database = {
           referral_reward_id?: string | null
           schedule_id?: string
           status?: Database["public"]["Enums"]["booking_status"]
+          terms_accepted_at?: string | null
           total_fare_kobo?: number
           updated_at?: string
           vendor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_boarding_agreement_id_fkey"
+            columns: ["boarding_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_promo_code_id_fkey"
             columns: ["promo_code_id"]
@@ -1871,6 +1947,66 @@ export type Database = {
           },
         ]
       }
+      vendor_agreements: {
+        Row: {
+          admin_signature: string | null
+          admin_signed_at: string | null
+          admin_signed_by: string | null
+          admin_signer_name: string | null
+          agreement_id: string
+          created_at: string
+          id: string
+          status: string
+          vendor_id: string
+          vendor_signature: string | null
+          vendor_signed_at: string | null
+          vendor_signer_name: string | null
+        }
+        Insert: {
+          admin_signature?: string | null
+          admin_signed_at?: string | null
+          admin_signed_by?: string | null
+          admin_signer_name?: string | null
+          agreement_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          vendor_id: string
+          vendor_signature?: string | null
+          vendor_signed_at?: string | null
+          vendor_signer_name?: string | null
+        }
+        Update: {
+          admin_signature?: string | null
+          admin_signed_at?: string | null
+          admin_signed_by?: string | null
+          admin_signer_name?: string | null
+          agreement_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          vendor_id?: string
+          vendor_signature?: string | null
+          vendor_signed_at?: string | null
+          vendor_signer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_agreements_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_agreements_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_payout_accounts: {
         Row: {
           account_name: string
@@ -2153,6 +2289,7 @@ export type Database = {
           reason: string
         }[]
       }
+      publish_agreement: { Args: { p_kind: string }; Returns: number }
       publish_schedule: { Args: { p_schedule: string }; Returns: undefined }
       reconcile_expired_holds: { Args: { p_schedule: string }; Returns: number }
       record_boarding: {
