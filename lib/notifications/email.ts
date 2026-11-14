@@ -1,5 +1,7 @@
 import "server-only";
 
+import { loadCommSettings } from "@/lib/notifications/settings";
+
 /**
  * Email transport abstraction.
  *
@@ -21,30 +23,27 @@ export interface EmailMessage {
   text: string;
 }
 
-function provider(): { apiKey: string; from: string } | null {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.NOTIFICATIONS_FROM_EMAIL;
-  if (!apiKey || !from) return null;
-  return { apiKey, from };
-}
-
-export function emailConfigured(): boolean {
-  return provider() !== null;
+export async function emailConfigured(): Promise<boolean> {
+  const { email } = await loadCommSettings();
+  return email.enabled && !!email.apiKey && !!email.from;
 }
 
 export async function sendEmail(msg: EmailMessage): Promise<SendResult> {
-  const p = provider();
-  if (!p) return { ok: false, reason: "email provider not configured", configured: false };
+  const { email } = await loadCommSettings();
+  if (!email.enabled || !email.apiKey || !email.from) {
+    return { ok: false, reason: "email provider not configured", configured: false };
+  }
+  const from = email.fromName ? `${email.fromName} <${email.from}>` : email.from;
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${p.apiKey}`,
+        Authorization: `Bearer ${email.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: p.from,
+        from,
         to: [msg.to],
         subject: msg.subject,
         html: msg.html,
@@ -53,7 +52,11 @@ export async function sendEmail(msg: EmailMessage): Promise<SendResult> {
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      return { ok: false, reason: `provider ${res.status}: ${body.slice(0, 200)}`, configured: true };
+      return {
+        ok: false,
+        reason: `provider ${res.status}: ${body.slice(0, 200)}`,
+        configured: true,
+      };
     }
     const json = (await res.json().catch(() => ({}))) as { id?: string };
     return { ok: true, providerMessageId: json.id ?? null };

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Luggage,
   MapPin,
+  Megaphone,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -36,6 +37,7 @@ export const primaryNav: NavItem[] = [
 export const secondaryNav: NavItem[] = [
   { href: "/dashboard/homepage", label: "Homepage content", icon: ImageIcon },
   { href: "/dashboard/promotions", label: "Promotions & referrals", icon: Tag },
+  { href: "/dashboard/communications", label: "Communications", icon: Megaphone },
   { href: "/dashboard/activity", label: "Activity log", icon: ScrollText },
   { href: "/dashboard/permissions", label: "Admin & permissions", icon: Settings },
   { href: "/dashboard/settings", label: "Org settings", icon: Settings },

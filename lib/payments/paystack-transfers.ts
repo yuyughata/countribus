@@ -1,7 +1,5 @@
 import "server-only";
 
-import { serverEnv } from "@/lib/env";
-
 /**
  * Paystack Transfers API — vendor settlement. Server-only; the secret key is
  * read from the environment. When unconfigured, callers degrade gracefully
@@ -11,7 +9,7 @@ import { serverEnv } from "@/lib/env";
 export type PaystackResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 function secretKey(): string | null {
-  return serverEnv().PAYSTACK_SECRET_KEY ?? null;
+  return process.env.PAYSTACK_SECRET_KEY || null;
 }
 
 export function transfersConfigured(): boolean {

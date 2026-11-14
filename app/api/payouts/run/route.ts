@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { serverEnv } from "@/lib/env";
 import { executePayouts } from "@/lib/payments/run-payouts";
 
 /**
@@ -10,7 +9,7 @@ import { executePayouts } from "@/lib/payments/run-payouts";
  * endpoint is disabled (secure by default).
  */
 export async function POST(req: NextRequest) {
-  const secret = serverEnv().PAYOUTS_CRON_SECRET;
+  const secret = process.env.PAYOUTS_CRON_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "payouts cron not configured" }, { status: 503 });
   }

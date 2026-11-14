@@ -364,3 +364,25 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   keys the framework still records accounts and schedules payouts (not sent).
   RLS: a vendor reads only their own account/payouts; admins all. Validated in
   `tests/db/phase10_payouts.sql` (11 checks).
+
+## Communications hub
+
+- **ADR-0034 Communications section: integrations, templates & email composer** —
+  a new admin **Communications** area (platform:manage) with three tabs:
+  - **Integrations** — admin-configurable provider credentials (`communication_settings`,
+    admin-only RLS): Resend (email), Twilio (SMS), Meta Cloud API (WhatsApp),
+    each with an enable toggle, masked secrets ("set"; blank keeps existing) and
+    a "send test". The senders (`lib/notifications/{email,sms,whatsapp}`) now read
+    these via a service-role loader (`settings.ts`) with env fallback, so a
+    channel only sends when enabled and configured. With no settings row (dev)
+    each channel defaults to enabled so env-based sending still works.
+  - **Templates** — all transactional templates in one branded wine shell
+    (`email-layout.ts`): booking confirmation, departure reminder, cancellation/
+    refund, welcome, referral reward, vendor new-booking, vendor approved/declined,
+    payout sent — browsable with live email + SMS preview (`catalog.ts`).
+  - **Emails** — a broadcast composer (adapted from the laundriroom reference):
+    type, subject, preview text, header/footer image, rich-text message, button,
+    audience segments (customers / operator managers / all staff / team / everyone)
+    + specific people, live recipient count, desktop/phone preview, save draft /
+    send test / send. Campaigns persist in `email_campaigns` (admin-only RLS);
+    `sendCampaign` resolves recipients and sends via Resend. Nav entry added.
