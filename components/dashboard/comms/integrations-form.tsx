@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { Mail, MessageCircle, Smartphone } from "lucide-react";
+import { Eye, EyeOff, Mail, MessageCircle, Smartphone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,17 +43,30 @@ function Secret({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const [show, setShow] = useState(false);
   return (
     <label className={labelClass}>
       {label} {isSet && <Badge tone="success">set</Badge>}
-      <input
-        type="password"
-        className={fieldClass}
-        autoComplete="off"
-        placeholder={isSet ? "•••••••• (leave blank to keep)" : "Paste key"}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <div className="relative">
+        <input
+          type={show ? "text" : "password"}
+          className={`${fieldClass} pr-11`}
+          autoComplete="off"
+          placeholder={isSet ? "•••••••• (leave blank to keep)" : "Paste key"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => setShow((s) => !s)}
+          aria-label={show ? "Hide value" : "Show value"}
+          aria-pressed={show}
+          className="text-subtle hover:text-foreground absolute inset-y-0 right-0 flex items-center px-3"
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
     </label>
   );
 }
