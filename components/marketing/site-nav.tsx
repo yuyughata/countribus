@@ -11,8 +11,8 @@ import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/utils";
 
 /**
- * Public header nav. Auth-aware: signed-out visitors get "Sign in" +
- * "Create an account"; signed-in users get "My bookings", "Manage account" and
+ * Public header nav. Auth-aware: signed-out visitors get "Sign in" (the login
+ * page links on to registration); signed-in users get "My bookings", "Manage account" and
  * a sign-out button. `tone="light"` sits over the dark hero (white text);
  * `tone="ink"` is the solid light header on interior pages. Collapses to a
  * hamburger menu on phones. `signedIn` is resolved on the server by SiteHeader.
@@ -80,17 +80,8 @@ export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; si
         ) : (
           <>
             <Link href="/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={light ? "text-white hover:bg-white/10" : ""}
-              >
-                Sign in
-              </Button>
-            </Link>
-            <Link href="/register">
               <Button variant={light ? "accent" : "primary"} size="sm">
-                Create an account
+                Sign in
               </Button>
             </Link>
           </>
@@ -142,15 +133,10 @@ export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; si
                 </form>
               </>
             ) : (
-              <div className="space-y-1 pt-1">
+              <div className="pt-1">
                 <Link href="/login" onClick={() => setOpen(false)} className="block">
-                  <Button variant="outline" className="w-full">
-                    Sign in
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setOpen(false)} className="block">
                   <Button variant="primary" className="w-full">
-                    Create an account
+                    Sign in
                   </Button>
                 </Link>
               </div>
