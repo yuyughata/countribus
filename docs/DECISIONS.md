@@ -201,3 +201,16 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   glyph per seat coloured by state. No schema change: column position is encoded
   in the existing seat labels. A sample 2+2 coach departure was seeded for the
   demo operator so the flow is bookable.
+
+## Wine primary rebrand
+
+- **ADR-0023 Wine primary** — the brand primary moved from amber to wine
+  (`--color-primary: #8c2743`) and the dark brand surface from navy to deep wine
+  (`--color-brand-ink: #3d1020`), keeping brushed gold as the accent (wine + gold
+  + cream). All surfaces consume tokens, so the swap propagated; the few
+  hardcoded values (button/seat shadows, hero sky gradient, PWA theme colors,
+  the ticket PDF ink + QR colour) were updated to match. Buttons are now pill
+  (`rounded-full`) with a wine shadow and a subtle hover lift, for a modern
+  rental-marketplace feel. (The rentallafrica.com reference could not be loaded
+  from the session — its host isn't in the allowed network — so the button feel
+  was interpreted from the brief.)

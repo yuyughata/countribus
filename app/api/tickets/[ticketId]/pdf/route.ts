@@ -63,7 +63,7 @@ export async function GET(
   const qrPng = await QRCode.toBuffer(`${appUrl}/verify/${ticket.qr_token}`, {
     width: 240,
     margin: 1,
-    color: { dark: "#0b1c36", light: "#ffffff" },
+    color: { dark: "#3d1020", light: "#ffffff" },
   });
 
   // --- Document -----------------------------------------------------------
@@ -74,7 +74,7 @@ export async function GET(
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  const ink = rgb(0.043, 0.11, 0.21); // #0B1C36 brand ink navy
+  const ink = rgb(0.239, 0.063, 0.125); // #3D1020 brand ink wine
   const gold = rgb(0.78, 0.63, 0.36); // #C8A15C accent
   const white = rgb(1, 1, 1);
   const paper = rgb(0.99, 0.985, 0.975);

@@ -239,7 +239,7 @@ function SeatButton({
       className={cn(
         "relative flex size-9 items-center justify-center transition-transform sm:size-10",
         st.clickable ? "hover:-translate-y-0.5 cursor-pointer" : "cursor-not-allowed",
-        eff === "selected" && "drop-shadow-[0_2px_6px_rgba(11,28,54,0.35)]",
+        eff === "selected" && "drop-shadow-[0_2px_6px_rgba(61,16,32,0.4)]",
       )}
     >
       <SeatGlyph solid={st.solid} />

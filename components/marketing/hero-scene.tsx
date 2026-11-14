@@ -14,9 +14,9 @@ export function HeroScene({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="hs-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0b1c36" />
-          <stop offset="42%" stopColor="#274063" />
-          <stop offset="70%" stopColor="#8a6b53" />
+          <stop offset="0%" stopColor="#3d1020" />
+          <stop offset="42%" stopColor="#6e2436" />
+          <stop offset="70%" stopColor="#9a6350" />
           <stop offset="88%" stopColor="#d99b53" />
           <stop offset="100%" stopColor="#f0b968" />
         </linearGradient>
