@@ -70,7 +70,16 @@ export async function notifyBookingConfirmed(admin: Admin, bookingId: string): P
 
     // --- Email ------------------------------------------------------------
     if (booking.contact_email) {
-      const msg = bookingConfirmationEmail(base);
+      // Attach the boarding policy the customer accepted (or the current one).
+      const { data: policy } = await admin
+        .from("agreements")
+        .select("content")
+        .eq("kind", "boarding")
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const boardingPolicy = (policy?.content ?? []) as { title: string; body: string }[];
+      const msg = bookingConfirmationEmail(base, boardingPolicy);
       const r = await sendEmail({
         to: booking.contact_email,
         subject: msg.subject,
@@ -81,7 +90,15 @@ export async function notifyBookingConfirmed(admin: Admin, bookingId: string): P
         subject: msg.subject,
       });
     } else {
-      await record(admin, bookingId, booking.created_by, "email", null, "skipped", "no contact email");
+      await record(
+        admin,
+        bookingId,
+        booking.created_by,
+        "email",
+        null,
+        "skipped",
+        "no contact email",
+      );
     }
 
     // --- SMS + WhatsApp ---------------------------------------------------
@@ -94,23 +111,58 @@ export async function notifyBookingConfirmed(admin: Admin, bookingId: string): P
       await recordResult(admin, bookingId, booking.created_by, "sms", booking.contact_phone, sms, {
         ticketId: booking.reference,
       });
-      await recordResult(admin, bookingId, booking.created_by, "whatsapp", booking.contact_phone, wa, {
-        ticketId: booking.reference,
-      });
+      await recordResult(
+        admin,
+        bookingId,
+        booking.created_by,
+        "whatsapp",
+        booking.contact_phone,
+        wa,
+        {
+          ticketId: booking.reference,
+        },
+      );
     } else {
-      await record(admin, bookingId, booking.created_by, "sms", null, "skipped", "no contact phone");
-      await record(admin, bookingId, booking.created_by, "whatsapp", null, "skipped", "no contact phone");
+      await record(
+        admin,
+        bookingId,
+        booking.created_by,
+        "sms",
+        null,
+        "skipped",
+        "no contact phone",
+      );
+      await record(
+        admin,
+        bookingId,
+        booking.created_by,
+        "whatsapp",
+        null,
+        "skipped",
+        "no contact phone",
+      );
     }
   } catch (e) {
     try {
-      await record(admin, bookingId, null, "email", null, "failed", e instanceof Error ? e.message : "unknown");
+      await record(
+        admin,
+        bookingId,
+        null,
+        "email",
+        null,
+        "failed",
+        e instanceof Error ? e.message : "unknown",
+      );
     } catch {
       /* swallow */
     }
   }
 }
 
-async function terminal(admin: Admin, terminalId: string): Promise<{ city: string; address: string }> {
+async function terminal(
+  admin: Admin,
+  terminalId: string,
+): Promise<{ city: string; address: string }> {
   const { data: t } = await admin
     .from("terminals")
     .select("city_id, address")
@@ -132,7 +184,17 @@ async function recordResult(
   payload: Json = {},
 ): Promise<void> {
   if (result.ok) {
-    await record(admin, bookingId, userId, channel, recipient, "sent", null, payload, result.providerMessageId);
+    await record(
+      admin,
+      bookingId,
+      userId,
+      channel,
+      recipient,
+      "sent",
+      null,
+      payload,
+      result.providerMessageId,
+    );
   } else if (!result.configured) {
     await record(admin, bookingId, userId, channel, recipient, "skipped", result.reason, payload);
   } else {

@@ -1,38 +1,34 @@
 import "server-only";
 
 import type { SendResult } from "@/lib/notifications/email";
+import { loadCommSettings } from "@/lib/notifications/settings";
 
 /**
- * SMS transport (Twilio REST). Server-only credentials; degrades to a
- * recorded `not configured` no-op when unset, so unprovisioned environments
- * record `skipped` rather than `failed`.
+ * SMS transport (Twilio REST). Credentials come from the admin-managed
+ * communication settings (with env fallback); degrades to a recorded
+ * `not configured` no-op when unset or disabled.
  */
 
-function provider(): { sid: string; token: string; from: string } | null {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_MESSAGING_FROM;
-  if (!sid || !token || !from) return null;
-  return { sid, token, from };
-}
-
-export function smsConfigured(): boolean {
-  return provider() !== null;
+export async function smsConfigured(): Promise<boolean> {
+  const { sms } = await loadCommSettings();
+  return sms.enabled && !!sms.sid && !!sms.token && !!sms.from;
 }
 
 export async function sendSms(to: string, body: string): Promise<SendResult> {
-  const p = provider();
-  if (!p) return { ok: false, reason: "sms provider not configured", configured: false };
+  const { sms } = await loadCommSettings();
+  if (!sms.enabled || !sms.sid || !sms.token || !sms.from) {
+    return { ok: false, reason: "sms provider not configured", configured: false };
+  }
 
   try {
-    const auth = Buffer.from(`${p.sid}:${p.token}`).toString("base64");
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${p.sid}/Messages.json`, {
+    const auth = Buffer.from(`${sms.sid}:${sms.token}`).toString("base64");
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sms.sid}/Messages.json`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ To: to, From: p.from, Body: body }).toString(),
+      body: new URLSearchParams({ To: to, From: sms.from, Body: body }).toString(),
     });
     if (!res.ok) {
       const t = await res.text().catch(() => "");

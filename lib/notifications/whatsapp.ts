@@ -1,10 +1,12 @@
 import "server-only";
 
 import type { SendResult } from "@/lib/notifications/email";
+import { loadCommSettings } from "@/lib/notifications/settings";
 
 /**
- * WhatsApp transport (Meta WhatsApp Cloud API). Server-only credentials;
- * degrades to a recorded `not configured` no-op when unset.
+ * WhatsApp transport (Meta WhatsApp Cloud API). Credentials come from the
+ * admin-managed communication settings (with env fallback); degrades to a
+ * recorded `not configured` no-op when unset or disabled.
  *
  * Note: outside the 24-hour customer-service window Meta requires an approved
  * message template. This sends a plain text body, which works for session
@@ -12,15 +14,9 @@ import type { SendResult } from "@/lib/notifications/email";
  * with an approved "booking_confirmation" template.
  */
 
-function provider(): { token: string; phoneId: string } | null {
-  const token = process.env.WHATSAPP_TOKEN;
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  if (!token || !phoneId) return null;
-  return { token, phoneId };
-}
-
-export function whatsappConfigured(): boolean {
-  return provider() !== null;
+export async function whatsappConfigured(): Promise<boolean> {
+  const { whatsapp } = await loadCommSettings();
+  return whatsapp.enabled && !!whatsapp.token && !!whatsapp.phoneId;
 }
 
 /** Normalise to the digits-only E.164-without-plus form Meta expects. */
@@ -29,14 +25,16 @@ function toWaId(phone: string): string {
 }
 
 export async function sendWhatsApp(to: string, body: string): Promise<SendResult> {
-  const p = provider();
-  if (!p) return { ok: false, reason: "whatsapp provider not configured", configured: false };
+  const { whatsapp } = await loadCommSettings();
+  if (!whatsapp.enabled || !whatsapp.token || !whatsapp.phoneId) {
+    return { ok: false, reason: "whatsapp provider not configured", configured: false };
+  }
 
   try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${p.phoneId}/messages`, {
+    const res = await fetch(`https://graph.facebook.com/v21.0/${whatsapp.phoneId}/messages`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${p.token}`,
+        Authorization: `Bearer ${whatsapp.token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

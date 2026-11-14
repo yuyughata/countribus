@@ -347,3 +347,61 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   stops customers choosing a pair that returns an empty search. The forms degrade
   gracefully to a "No trips open right now" message when there is no inventory.
   Replaces the previous `listTerminalOptionsPublic` feed into the search forms.
+
+## Vendor payouts (Paystack)
+
+- **ADR-0033 Automatic vendor settlement via Paystack transfers** — vendors add a
+  bank account under Org settings → Payout account (`vendor_payout_accounts`;
+  when Paystack is configured the number is resolved and a transfer recipient is
+  created, marking it verified). Paid bookings post `vendor_net` to the ledger;
+  `process_due_payouts` (security definer, admin/service-role) sweeps unsettled
+  `vendor_net` for vendors with a verified account into one `payouts` row each and
+  links the ledger entries (idempotent — `financial_ledger.payout_id` prevents
+  double-pay). The engine (`lib/payments/run-payouts.ts`) then pushes each
+  scheduled payout to Paystack Transfers. It runs from the Finance page ("Run
+  payouts now", admin) and from `POST /api/payouts/run` (bearer `PAYOUTS_CRON_SECRET`),
+  which a scheduler calls hourly so vendors are paid within 24h. Without Paystack
+  keys the framework still records accounts and schedules payouts (not sent).
+  RLS: a vendor reads only their own account/payouts; admins all. Validated in
+  `tests/db/phase10_payouts.sql` (11 checks).
+
+## Communications hub
+
+- **ADR-0034 Communications section: integrations, templates & email composer** —
+  a new admin **Communications** area (platform:manage) with three tabs:
+  - **Integrations** — admin-configurable provider credentials (`communication_settings`,
+    admin-only RLS): Resend (email), Twilio (SMS), Meta Cloud API (WhatsApp),
+    each with an enable toggle, masked secrets ("set"; blank keeps existing) and
+    a "send test". The senders (`lib/notifications/{email,sms,whatsapp}`) now read
+    these via a service-role loader (`settings.ts`) with env fallback, so a
+    channel only sends when enabled and configured. With no settings row (dev)
+    each channel defaults to enabled so env-based sending still works.
+  - **Templates** — all transactional templates in one branded wine shell
+    (`email-layout.ts`): booking confirmation, departure reminder, cancellation/
+    refund, welcome, referral reward, vendor new-booking, vendor approved/declined,
+    payout sent — browsable with live email + SMS preview (`catalog.ts`).
+  - **Emails** — a broadcast composer (adapted from the laundriroom reference):
+    type, subject, preview text, header/footer image, rich-text message, button,
+    audience segments (customers / operator managers / all staff / team / everyone)
+    + specific people, live recipient count, desktop/phone preview, save draft /
+    send test / send. Campaigns persist in `email_campaigns` (admin-only RLS);
+    `sendCampaign` resolves recipients and sends via Resend. Nav entry added.
+
+## Agreement signing & customer acceptance
+
+- **ADR-0035 E-signed Partner Agreement + customer Boarding Policy acceptance** —
+  operators review the current Partner Agreement in their dashboard
+  (/dashboard/agreement) and e-sign with a touch/mouse signature pad; the
+  signature (PNG data URL) is stored on `vendor_agreements`. A platform admin
+  counter-signs pending signatures from Agreements → Partner agreement. On
+  counter-signature the fully-signed PDF (pdf-lib, both signatures) is emailed to
+  the operator (Resend attachment) and is always downloadable at
+  `/api/agreements/[id]/pdf` (RLS-scoped). When the agreement is re-versioned,
+  the operator's acceptance no longer matches the current version and they're
+  shown "Action needed" to sign again. Customers accept the T&Cs + current
+  Boarding Policy via a required checkbox at checkout (enforced server-side);
+  acceptance is stamped on the booking (`terms_accepted_at`,
+  `boarding_agreement_id`). Public `/boarding-policy` and `/terms` pages render
+  the live policy, and the boarding policy is appended to every booking
+  confirmation email. Verified end-to-end (sign → counter-sign → PDF 200) and the
+  version-bump/dedup with a local DB test.
