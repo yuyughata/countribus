@@ -16,21 +16,30 @@ import { Button } from "@/components/ui/button";
 import { SiteFooter, SiteHeader } from "@/components/marketing/site-chrome";
 import { HeroScene } from "@/components/marketing/hero-scene";
 import { HeroSearch } from "@/components/marketing/hero-search";
+import { HeroCarousel } from "@/components/marketing/hero-carousel";
 import { listTerminalOptionsPublic } from "@/features/search/queries";
+import { listActiveHeroImages } from "@/features/hero/queries";
 
 export default async function Home() {
-  const terminals = await listTerminalOptionsPublic().catch(() => []);
+  const [terminals, heroImages] = await Promise.all([
+    listTerminalOptionsPublic().catch(() => []),
+    listActiveHeroImages().catch(() => []),
+  ]);
 
   return (
     <main className="min-h-full">
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative isolate overflow-hidden">
-        <HeroScene className="absolute inset-0 -z-20 size-full" />
-        {/* Legibility scrims */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-ink/80 via-brand-ink/45 to-brand-ink/10" />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-canvas to-transparent" />
+        {heroImages.length > 0 ? (
+          <HeroCarousel images={heroImages} />
+        ) : (
+          <HeroScene className="absolute inset-0 size-full" />
+        )}
+        {/* Legibility scrims (don't block the search widget) */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-ink/85 via-brand-ink/50 to-brand-ink/15" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-canvas to-transparent" />
 
-        <div className="relative mx-auto max-w-6xl px-5 pt-4 pb-14 sm:px-6 sm:pb-20">
+        <div className="relative z-10 mx-auto max-w-6xl px-5 pt-4 pb-14 sm:px-6 sm:pb-20">
           <SiteHeader tone="light" />
 
           <div className="max-w-2xl pt-12 pb-9 sm:pt-20 sm:pb-12">
@@ -39,11 +48,11 @@ export default async function Home() {
               Nigeria&apos;s intercity bus marketplace
             </span>
             <h1 className="font-display mt-5 text-balance text-3xl leading-[1.08] font-semibold tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
-              Affordable coach travel &amp; bus tickets across Nigeria
+              Intercity booking has never been easier.
             </h1>
             <p className="mt-4 max-w-xl text-pretty text-sm text-white/80 sm:text-base">
-              Compare fares from trusted operators and book your seat in seconds — from just{" "}
-              <span className="font-semibold text-white">₦8,500</span>.
+              Search easily, book conveniently, pay securely — all from your phone. No hassle, no
+              stress; just walk in to the terminal to board and be on your way.
             </p>
           </div>
 

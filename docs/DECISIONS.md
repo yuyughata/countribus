@@ -229,3 +229,17 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   `DashboardHeader` (or the inline equivalent for dynamic titles), and auth
   headings use the display font. Buttons (pill), cards and tokens were already
   shared, so the app reads as one system.
+
+## Hero copy + admin-managed photo slider
+
+- **ADR-0026 Homepage hero slider** — the hero headline/subtext were updated and
+  the SVG scene is now a background photo slideshow when the admin has added
+  images (crossfade carousel with dots; falls back to the scene when empty).
+  `hero_images` holds the slides (public read of active rows — the policy checks
+  only `is_active` so the anonymous homepage read never calls a helper the anon
+  role can't execute; admins read/manage all). Images live in a public Storage
+  bucket `hero`; the admin's own session uploads them (Storage RLS limits writes
+  to platform admins — no service-role key needed). Managed at
+  /dashboard/homepage (admin only): upload, reorder, hide, delete. The landing
+  page is dynamic so new images appear without a redeploy. Server-action body
+  limit raised to 7 MB for uploads.

@@ -12,6 +12,36 @@ export type Database = {
   };
   public: {
     Tables: {
+      hero_images: {
+        Row: {
+          id: string;
+          storage_path: string | null;
+          url: string;
+          caption: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          storage_path?: string | null;
+          url: string;
+          caption?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          storage_path?: string | null;
+          url?: string;
+          caption?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           action: string;
