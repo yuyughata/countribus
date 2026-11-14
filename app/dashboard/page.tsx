@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
+import { DashboardHeader } from "@/components/dashboard/page-header";
 import { getAuthContext } from "@/lib/auth/context";
 import { formatKobo } from "@/lib/money";
 import { dashboardMode, getAdminDashboard, getVendorDashboard } from "@/features/dashboard/queries";
@@ -21,10 +22,7 @@ export default async function DashboardPage() {
     const m = await getVendorDashboard(mode.vendorId);
     return (
       <div className="space-y-5 p-5">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Welcome back 👋</h2>
-          <p className="text-sm text-muted">Your operator performance.</p>
-        </div>
+        <DashboardHeader eyebrow="Overview" title="Welcome back 👋" subtitle="Your operator performance." />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard label="Gross bookings" value={formatKobo(m?.gross_booking_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="primary" />
           <StatCard label="Net revenue" value={formatKobo(m?.net_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="success" />
@@ -44,7 +42,7 @@ export default async function DashboardPage() {
   if (mode.mode === "none") {
     return (
       <div className="space-y-5 p-5">
-        <h2 className="text-xl font-semibold text-foreground">Welcome 👋</h2>
+        <DashboardHeader eyebrow="Overview" title="Welcome 👋" />
         <Card className="p-6 text-sm text-muted">
           You don&apos;t manage an operator yet.{" "}
           <Link href="/dashboard/vendors/new" className="font-medium text-primary">Onboard your transport business</Link> to get started.
@@ -59,10 +57,7 @@ export default async function DashboardPage() {
   return (
     <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-[1fr_320px]">
       <div className="space-y-5">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Welcome back 👋</h2>
-          <p className="text-sm text-muted">Platform activity overview.</p>
-        </div>
+        <DashboardHeader eyebrow="Overview" title="Welcome back 👋" subtitle="Platform activity overview." />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard label="Gross booking value" value={formatKobo(metrics?.gross_booking_kobo ?? 0)} icon={<Wallet className="size-4" />} tone="primary" />

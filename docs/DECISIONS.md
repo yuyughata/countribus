@@ -214,3 +214,18 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   rental-marketplace feel. (The rentallafrica.com reference could not be loaded
   from the session — its host isn't in the allowed network — so the button feel
   was interpreted from the brief.)
+
+## Logo + app-wide UI consistency
+
+- **ADR-0024 Wordmark logo** — the pin-icon mark was dropped; the logo is now
+  the "countribus" wordmark in bold sans (matching the supplied reference), with
+  "bus" in wine. On dark surfaces (hero/footer) "countri" is white and "bus"
+  uses a lighter wine (#e39bac) so it stays legible on deep wine.
+- **ADR-0025 One UI feel everywhere** — shared form-control styles
+  (`components/ui/field.ts`: rounded, hairline border, wine focus ring) replace
+  the per-form input strings across every form (auth, search, checkout,
+  schedules, fleet, profile, commission, seat editor). Every dashboard page now
+  uses the same header treatment (gold eyebrow + Fraunces display title) via
+  `DashboardHeader` (or the inline equivalent for dynamic titles), and auth
+  headings use the display font. Buttons (pill), cards and tokens were already
+  shared, so the app reads as one system.

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fieldClass as field } from "@/components/ui/field";
 import {
   cancelSchedule,
   createRoute,
@@ -33,8 +34,6 @@ type Sched = {
   destination: { name: string } | null;
 };
 
-const field =
-  "h-9 w-full rounded-md border border-border bg-surface px-2 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none";
 
 const statusTone: Record<string, "warning" | "success" | "danger" | "neutral"> = {
   draft: "warning",

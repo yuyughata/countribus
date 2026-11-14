@@ -9,7 +9,9 @@ export default function RegisterPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-foreground text-lg font-semibold">Create your account</h1>
+        <h1 className="font-display text-foreground text-2xl font-semibold tracking-tight">
+          Create your account
+        </h1>
         <p className="text-muted text-sm">Book journeys or onboard your transport business.</p>
       </div>
       <AuthForm

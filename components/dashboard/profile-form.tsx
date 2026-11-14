@@ -4,10 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { fieldClass as field } from "@/components/ui/field";
 import { updateProfile } from "@/features/profile/actions";
-
-const field =
-  "h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none";
 
 export function ProfileForm({ fullName, phone }: { fullName: string; phone: string }) {
   const router = useRouter();

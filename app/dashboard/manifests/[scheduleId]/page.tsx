@@ -35,10 +35,16 @@ export default async function ManifestPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-foreground text-xl font-semibold">
+          <span className="inline-flex items-center gap-3">
+            <span className="rule-gold" />
+            <span className="text-accent-strong text-[11px] font-semibold tracking-widest uppercase">
+              Departure
+            </span>
+          </span>
+          <h1 className="font-display text-foreground mt-1.5 text-2xl font-semibold tracking-tight">
             {schedule.origin?.name} → {schedule.destination?.name}
-          </h2>
-          <p className="text-muted text-sm">
+          </h1>
+          <p className="text-muted mt-1 text-sm">
             {new Date(schedule.departure_at).toLocaleString("en-NG")} · {rows.length} passengers ·{" "}
             {boarded} boarded · <Luggage className="inline size-3.5" /> {luggageTotal} bags
           </p>

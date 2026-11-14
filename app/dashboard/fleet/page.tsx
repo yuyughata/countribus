@@ -5,6 +5,7 @@ import { Bus, LayoutGrid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddVehicleForm } from "@/components/fleet/add-vehicle-form";
+import { DashboardHeader } from "@/components/dashboard/page-header";
 import { DeleteButton } from "@/components/dashboard/delete-button";
 import { getAuthContext, firstManageableVendorId } from "@/lib/auth/context";
 import { listCategories, listVehicles } from "@/features/fleet/queries";
@@ -21,12 +22,11 @@ export default async function FleetPage() {
 
   return (
     <div className="space-y-5 p-5">
-      <div>
-        <h2 className="text-foreground text-xl font-semibold">Fleet</h2>
-        <p className="text-muted text-sm">
-          Vehicles and seat layouts. Managed by vendor owners/managers and platform admins only.
-        </p>
-      </div>
+      <DashboardHeader
+        eyebrow="Operations"
+        title="Fleet"
+        subtitle="Vehicles and seat layouts. Managed by vendor owners/managers and platform admins only."
+      />
 
       {vendorId ? (
         <Card>
