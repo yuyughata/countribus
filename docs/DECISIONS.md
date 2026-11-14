@@ -335,3 +335,15 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   row with prev/next arrows on desktop and swipe on mobile; it renders nothing
   when there is no inventory. Data-driven (not CMS-managed) so it always reflects
   live availability.
+
+## Bookable-only trip finder
+
+- **ADR-0032 Trip finder shows only bookable routes** — the From/To pickers (hero
+  and /search) are now driven by `list_bookable_routes` (security definer):
+  distinct (origin → destination) pairs that have at least one upcoming published
+  departure with available seats. From lists only origins that have bookable
+  trips; To is dependent — it lists only the destinations reachable from the
+  chosen origin (and is re-clamped when the origin changes or on swap). This
+  stops customers choosing a pair that returns an empty search. The forms degrade
+  gracefully to a "No trips open right now" message when there is no inventory.
+  Replaces the previous `listTerminalOptionsPublic` feed into the search forms.

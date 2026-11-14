@@ -4,6 +4,38 @@ import { createClient } from "@/lib/supabase/server";
 
 export type TerminalOption = { id: string; label: string };
 
+export type RouteOptions = {
+  /** Origins with at least one bookable upcoming departure. */
+  origins: TerminalOption[];
+  /** For each origin id, the destinations reachable with available seats. */
+  destinationsByOrigin: Record<string, TerminalOption[]>;
+};
+
+/**
+ * The (origin → destination) pairs a customer can actually book right now.
+ * Powers the trip-finder pickers so only routes that return results are
+ * selectable (no dead-end searches).
+ */
+export async function listBookableRoutes(): Promise<RouteOptions> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("list_bookable_routes");
+  if (error) return { origins: [], destinationsByOrigin: {} };
+  const rows = (data ?? []) as {
+    origin_id: string;
+    origin_label: string;
+    dest_id: string;
+    dest_label: string;
+  }[];
+  const originLabels = new Map<string, string>();
+  const destinationsByOrigin: Record<string, TerminalOption[]> = {};
+  for (const r of rows) {
+    originLabels.set(r.origin_id, r.origin_label);
+    (destinationsByOrigin[r.origin_id] ??= []).push({ id: r.dest_id, label: r.dest_label });
+  }
+  const origins = [...originLabels].map(([id, label]) => ({ id, label }));
+  return { origins, destinationsByOrigin };
+}
+
 export async function listTerminalOptionsPublic(): Promise<TerminalOption[]> {
   const supabase = await createClient();
   const { data } = await supabase

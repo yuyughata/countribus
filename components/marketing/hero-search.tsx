@@ -3,12 +3,20 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ArrowLeftRight, ChevronLeft, ChevronRight, MapPin, Minus, Plus, Search, Users } from "lucide-react";
+import {
+  ArrowLeftRight,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Minus,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-type Opt = { id: string; label: string };
+import type { RouteOptions } from "@/features/search/queries";
 
 function addDays(iso: string, n: number) {
   const d = new Date(iso + "T00:00:00");
@@ -26,13 +34,16 @@ function prettyDate(iso: string) {
   return iso === today ? `Today, ${label.replace(/^\w+,\s/, "")}` : label;
 }
 
-export function HeroSearch({ terminals }: { terminals: Opt[] }) {
+export function HeroSearch({ routes }: { routes: RouteOptions }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
 
+  const origins = routes.origins;
+  const firstOrigin = origins[0]?.id ?? "";
+
   const [trip, setTrip] = useState<"one_way" | "return">("one_way");
-  const [origin, setOrigin] = useState(terminals[0]?.id ?? "");
-  const [dest, setDest] = useState(terminals[1]?.id ?? "");
+  const [origin, setOrigin] = useState(firstOrigin);
+  const [dest, setDest] = useState((routes.destinationsByOrigin[firstOrigin] ?? [])[0]?.id ?? "");
   const [date, setDate] = useState(today);
   const [returnDate, setReturnDate] = useState(addDays(today, 2));
   const [pax, setPax] = useState({ adults: 1, children: 0, infants: 0 });
@@ -47,26 +58,51 @@ export function HeroSearch({ terminals }: { terminals: Opt[] }) {
     return parts.join(", ") || "1 Adult";
   }, [pax]);
 
+  const destOptions = useMemo(() => routes.destinationsByOrigin[origin] ?? [], [routes, origin]);
+
+  function chooseOrigin(id: string) {
+    setOrigin(id);
+    const opts = routes.destinationsByOrigin[id] ?? [];
+    if (!opts.some((o) => o.id === dest)) setDest(opts[0]?.id ?? "");
+  }
+
   function swap() {
+    // Only swap if the reversed route is itself bookable.
+    const opts = routes.destinationsByOrigin[dest] ?? [];
+    if (opts.length === 0) return;
+    const prevOrigin = origin;
     setOrigin(dest);
-    setDest(origin);
+    setDest(opts.some((o) => o.id === prevOrigin) ? prevOrigin : (opts[0]?.id ?? ""));
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!origin || !dest) return;
     const q = new URLSearchParams({ origin, dest, date, pax: String(seated) }).toString();
     router.push(`/search?${q}`);
   }
 
+  if (origins.length === 0) {
+    return (
+      <div className="glass mx-auto w-full max-w-4xl rounded-2xl p-6 text-center shadow-[var(--shadow-lift)] ring-1 ring-black/5">
+        <p className="text-foreground text-sm font-medium">
+          No trips are open for booking right now.
+        </p>
+        <p className="text-muted mt-1 text-sm">
+          Please check back soon — new departures are added daily.
+        </p>
+      </div>
+    );
+  }
+
   const cell = "flex flex-col gap-1 px-3 py-2.5 text-left";
   const label = "text-subtle text-[11px] font-semibold uppercase tracking-wide";
-  const control =
-    "w-full bg-transparent text-sm font-medium text-foreground focus:outline-none";
+  const control = "w-full bg-transparent text-sm font-medium text-foreground focus:outline-none";
 
   return (
     <form
       onSubmit={submit}
-      className="glass shadow-[var(--shadow-lift)] mx-auto w-full max-w-4xl rounded-2xl p-2.5 ring-1 ring-black/5 sm:p-3"
+      className="glass mx-auto w-full max-w-4xl rounded-2xl p-2.5 shadow-[var(--shadow-lift)] ring-1 ring-black/5 sm:p-3"
     >
       {/* Trip type */}
       <div className="flex items-center gap-1 px-1.5 pb-2.5">
@@ -100,8 +136,12 @@ export function HeroSearch({ terminals }: { terminals: Opt[] }) {
           <span className={label}>From</span>
           <div className="flex items-center gap-2">
             <MapPin className="text-accent-strong size-4 shrink-0" />
-            <select className={control} value={origin} onChange={(e) => setOrigin(e.target.value)}>
-              {terminals.map((t) => (
+            <select
+              className={control}
+              value={origin}
+              onChange={(e) => chooseOrigin(e.target.value)}
+            >
+              {origins.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
                 </option>
@@ -113,7 +153,7 @@ export function HeroSearch({ terminals }: { terminals: Opt[] }) {
             type="button"
             onClick={swap}
             aria-label="Swap origin and destination"
-            className="border-border bg-surface text-muted hover:text-primary absolute top-1/2 right-0 z-10 hidden size-8 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border shadow-sm sm:flex"
+            className="border-border bg-surface text-muted hover:text-primary absolute top-1/2 right-0 z-10 hidden size-8 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm sm:flex"
           >
             <ArrowLeftRight className="size-3.5" />
           </button>
@@ -125,7 +165,7 @@ export function HeroSearch({ terminals }: { terminals: Opt[] }) {
           <div className="flex items-center gap-2">
             <MapPin className="text-accent-strong size-4 shrink-0" />
             <select className={control} value={dest} onChange={(e) => setDest(e.target.value)}>
-              {terminals.map((t) => (
+              {destOptions.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
                 </option>
@@ -267,11 +307,22 @@ function Stepper({
         <p className="text-subtle text-[11px]">{hint}</p>
       </div>
       <div className="flex items-center gap-3">
-        <button type="button" className={btn} disabled={value <= min} onClick={() => onChange(value - 1)} aria-label={`Fewer ${label}`}>
+        <button
+          type="button"
+          className={btn}
+          disabled={value <= min}
+          onClick={() => onChange(value - 1)}
+          aria-label={`Fewer ${label}`}
+        >
           <Minus className="size-4" />
         </button>
         <span className="w-5 text-center text-sm font-semibold tabular-nums">{value}</span>
-        <button type="button" className={btn} onClick={() => onChange(value + 1)} aria-label={`More ${label}`}>
+        <button
+          type="button"
+          className={btn}
+          onClick={() => onChange(value + 1)}
+          aria-label={`More ${label}`}
+        >
           <Plus className="size-4" />
         </button>
       </div>
