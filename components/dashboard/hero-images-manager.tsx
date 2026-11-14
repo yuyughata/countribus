@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { ArrowDown, ArrowUp, Eye, EyeOff, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { fieldClass } from "@/components/ui/field";
@@ -20,7 +20,8 @@ export function HeroImagesManager({ images }: { images: HeroImage[] }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [caption, setCaption] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) {
     setErr(null);
@@ -34,39 +35,51 @@ export function HeroImagesManager({ images }: { images: HeroImage[] }) {
     });
   }
 
-  function onUpload(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    run(() => uploadHeroImage(fd), () => formRef.current?.reset());
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("caption", caption);
+    run(
+      () => uploadHeroImage(fd),
+      () => {
+        setCaption("");
+        if (fileRef.current) fileRef.current.value = "";
+      },
+    );
   }
 
   return (
     <div className="space-y-5">
       {err && <p className="bg-danger-soft text-danger rounded-lg px-3 py-2 text-sm">{err}</p>}
 
-      <form
-        ref={formRef}
-        onSubmit={onUpload}
-        className="border-border bg-surface flex flex-wrap items-end gap-3 rounded-xl border p-4"
-      >
-        <label className="text-muted space-y-1 text-xs font-medium">
-          Image file
-          <input
-            name="file"
-            type="file"
-            accept="image/*"
-            required
-            className="text-muted file:bg-primary-soft file:text-primary block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium"
-          />
-        </label>
+      <div className="border-border bg-surface flex flex-wrap items-end gap-3 rounded-xl border p-4">
         <label className="text-muted space-y-1 text-xs font-medium">
           Caption (optional)
-          <input name="caption" className={cn(fieldClass, "w-56")} placeholder="e.g. Lagos terminal" />
+          <input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            className={cn(fieldClass, "w-56")}
+            placeholder="e.g. Lagos terminal"
+          />
         </label>
-        <Button type="submit" disabled={pending} className="gap-2">
-          <Upload className="size-4" /> {pending ? "Uploading…" : "Upload image"}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onPick}
+        />
+        <Button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={pending}
+          className="gap-2"
+        >
+          <Plus className="size-4" /> {pending ? "Adding…" : "Add slide"}
         </Button>
-      </form>
+      </div>
 
       {images.length === 0 ? (
         <p className="text-muted text-sm">
