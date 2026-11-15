@@ -266,6 +266,7 @@ export type Database = {
       bookings: {
         Row: {
           boarding_agreement_id: string | null;
+          terms_agreement_id: string | null;
           contact_email: string | null;
           contact_name: string;
           contact_phone: string;
@@ -290,6 +291,7 @@ export type Database = {
         };
         Insert: {
           boarding_agreement_id?: string | null;
+          terms_agreement_id?: string | null;
           contact_email?: string | null;
           contact_name: string;
           contact_phone: string;
@@ -314,6 +316,7 @@ export type Database = {
         };
         Update: {
           boarding_agreement_id?: string | null;
+          terms_agreement_id?: string | null;
           contact_email?: string | null;
           contact_name?: string;
           contact_phone?: string;
@@ -340,6 +343,13 @@ export type Database = {
           {
             foreignKeyName: "bookings_boarding_agreement_id_fkey";
             columns: ["boarding_agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "agreements";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_terms_agreement_id_fkey";
+            columns: ["terms_agreement_id"];
             isOneToOne: false;
             referencedRelation: "agreements";
             referencedColumns: ["id"];

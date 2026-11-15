@@ -56,14 +56,24 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
   }
 
   const supabase = await createClient();
-  // Current boarding policy version to stamp on the booking as accepted.
-  const { data: boarding } = await supabase
-    .from("agreements")
-    .select("id")
-    .eq("kind", "boarding")
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Current boarding-policy and terms versions to stamp on the booking as
+  // accepted (the acceptance audit trail).
+  const [{ data: boarding }, { data: terms }] = await Promise.all([
+    supabase
+      .from("agreements")
+      .select("id")
+      .eq("kind", "boarding")
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("agreements")
+      .select("id")
+      .eq("kind", "terms")
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
   const { data, error } = await supabase.rpc("create_booking_from_hold", {
     p_schedule: input.scheduleId,
     p_hold_token: input.holdToken,
@@ -87,6 +97,7 @@ export async function createBookingAndPay(input: CheckoutInput): Promise<Checkou
     .update({
       terms_accepted_at: new Date().toISOString(),
       boarding_agreement_id: boarding?.id ?? null,
+      terms_agreement_id: terms?.id ?? null,
     })
     .eq("id", booking.booking_id);
 
