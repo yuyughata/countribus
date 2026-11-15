@@ -33,6 +33,39 @@ export async function createRoute(input: unknown): Promise<Result<{ routeId: str
   return { ok: true, data: { routeId: data.id } };
 }
 
+export async function updateRoute(
+  routeId: string,
+  input: unknown,
+): Promise<Result<{ routeId: string }>> {
+  const ctx = await requireUser();
+  const supabase = await createClient();
+  const { data: route } = await supabase
+    .from("routes")
+    .select("vendor_id")
+    .eq("id", routeId)
+    .maybeSingle();
+  if (!route) return { ok: false, error: "Route not found" };
+  if (!canForVendor(ctx, route.vendor_id, "route:manage")) {
+    return { ok: false, error: "Not allowed to manage routes for this vendor" };
+  }
+  const parsed = routeSchema.safeParse({ vendorId: route.vendor_id, ...(input as object) });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid route" };
+  }
+  const { error } = await supabase
+    .from("routes")
+    .update({
+      name: parsed.data.name,
+      origin_terminal_id: parsed.data.originTerminalId,
+      destination_terminal_id: parsed.data.destinationTerminalId,
+    })
+    .eq("id", routeId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/dashboard/routes");
+  revalidatePath("/dashboard/schedules");
+  return { ok: true, data: { routeId } };
+}
+
 export async function createSchedule(input: unknown): Promise<Result<{ scheduleId: string }>> {
   const ctx = await requireUser();
   const parsed = scheduleSchema.safeParse(input);

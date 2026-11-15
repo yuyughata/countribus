@@ -31,6 +31,25 @@ export async function listRoutes() {
   }[];
 }
 
+/** Routes with their terminal ids, for the editable Route management list. */
+export async function listRoutesWithTerminals() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("routes")
+    .select(
+      "id, name, origin_terminal_id, destination_terminal_id, origin:origin_terminal_id(name), destination:destination_terminal_id(name)",
+    )
+    .order("created_at", { ascending: false });
+  return (data ?? []) as unknown as {
+    id: string;
+    name: string;
+    origin_terminal_id: string;
+    destination_terminal_id: string;
+    origin: { name: string } | null;
+    destination: { name: string } | null;
+  }[];
+}
+
 export async function listManageableVehicleOptions() {
   const supabase = await createClient();
   const { data } = await supabase

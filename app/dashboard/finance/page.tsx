@@ -4,6 +4,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardHeader } from "@/components/dashboard/page-header";
+import { DownloadPdfButton } from "@/components/dashboard/download-pdf-button";
 import { RunPayoutsButton } from "@/components/dashboard/run-payouts-button";
 import { requireDashboardCapability } from "@/lib/auth/guard";
 import { createClient } from "@/lib/supabase/server";
@@ -77,6 +78,7 @@ export default async function FinancePage() {
             ? "Platform-wide settlement across all operators."
             : "Your operator earnings and settlement."
         }
+        action={<DownloadPdfButton href="/api/reports/finance/pdf" />}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
