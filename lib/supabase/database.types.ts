@@ -279,6 +279,7 @@ export type Database = {
           id: string;
           luggage_fee_kobo: number;
           passenger_count: number;
+          payment_deadline: string;
           promo_code_id: string | null;
           reference: string;
           referral_reward_id: string | null;
@@ -304,6 +305,7 @@ export type Database = {
           id?: string;
           luggage_fee_kobo?: number;
           passenger_count: number;
+          payment_deadline?: string;
           promo_code_id?: string | null;
           reference: string;
           referral_reward_id?: string | null;
@@ -329,6 +331,7 @@ export type Database = {
           id?: string;
           luggage_fee_kobo?: number;
           passenger_count?: number;
+          payment_deadline?: string;
           promo_code_id?: string | null;
           reference?: string;
           referral_reward_id?: string | null;
@@ -2256,6 +2259,10 @@ export type Database = {
       cancel_booking: {
         Args: { p_booking: string; p_reason?: string };
         Returns: undefined;
+      };
+      expire_overdue_bookings: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
       };
       confirm_payment: {
         Args: {

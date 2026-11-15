@@ -9,18 +9,10 @@ import { Card } from "@/components/ui/card";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { getAuthContext } from "@/lib/auth/context";
 import { formatKobo } from "@/lib/money";
+import { BOOKING_STATUS_TONE, bookingStatusLabel } from "@/lib/booking/status";
 import { listMyBookings } from "@/features/booking/account";
 
 export const metadata = { title: "My bookings" };
-
-const tone: Record<string, "warning" | "success" | "danger" | "neutral"> = {
-  pending_payment: "warning",
-  paid: "success",
-  cancelled: "danger",
-  refunded: "neutral",
-  failed: "danger",
-  expired: "neutral",
-};
 
 export default async function MyBookingsPage() {
   const ctx = await getAuthContext();
@@ -66,7 +58,9 @@ export default async function MyBookingsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-foreground font-semibold">{b.reference}</p>
-                      <Badge tone={tone[b.status] ?? "neutral"}>{b.status.replace("_", " ")}</Badge>
+                      <Badge tone={BOOKING_STATUS_TONE[b.status] ?? "neutral"}>
+                        {bookingStatusLabel(b.status)}
+                      </Badge>
                     </div>
                     <p className="text-muted text-xs">
                       {b.passenger_count} passenger{b.passenger_count === 1 ? "" : "s"} ·{" "}
