@@ -124,6 +124,30 @@ export default async function BookingDetailPage({
               </div>
             </div>
 
+            {booking.terms_accepted_at && (
+              <div className="border-border border-t pt-3">
+                <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
+                  Agreements accepted
+                </p>
+                <p className="text-foreground mt-0.5">
+                  <a href="/terms" target="_blank" className="text-primary font-medium">
+                    Terms &amp; Conditions
+                    {booking.terms_agreement?.version ? ` v${booking.terms_agreement.version}` : ""}
+                  </a>{" "}
+                  and{" "}
+                  <a href="/boarding-policy" target="_blank" className="text-primary font-medium">
+                    Boarding Policy
+                    {booking.boarding_agreement?.version
+                      ? ` v${booking.boarding_agreement.version}`
+                      : ""}
+                  </a>
+                </p>
+                <p className="text-subtle text-xs">
+                  Accepted {new Date(booking.terms_accepted_at).toLocaleString("en-NG")}
+                </p>
+              </div>
+            )}
+
             {booking.status === "pending_payment" && (
               <p className="text-warning">
                 Payment pending — your seats are held while you complete payment.
