@@ -5,7 +5,7 @@ import { ArrowRight, Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SearchForm } from "@/components/search/search-form";
+import { HeroSearch } from "@/components/marketing/hero-search";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { formatKobo } from "@/lib/money";
 import {
@@ -92,15 +92,9 @@ export default async function SearchPage({
           </p>
         </div>
 
-        <SearchForm
+        <HeroSearch
           routes={routes}
-          initial={{
-            origin: sp.origin,
-            dest: sp.dest,
-            date: sp.date,
-            pax: sp.pax,
-            category: sp.category,
-          }}
+          initial={{ origin: sp.origin, dest: sp.dest, date: sp.date, pax: sp.pax }}
         />
 
         {hasQuery && (
