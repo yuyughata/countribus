@@ -50,6 +50,29 @@ export async function listRoutesWithTerminals() {
   }[];
 }
 
+export type RouteSchedule = {
+  id: string;
+  route_id: string;
+  status: string;
+  departure_at: string;
+  arrival_estimate_at: string | null;
+  base_fare_kobo: number | null;
+  boarding_address: string | null;
+  boarding_contact_phone: string | null;
+};
+
+/** Departures (any status) grouped-able by route, for in-place schedule editing. */
+export async function listSchedulesForRoutes(): Promise<RouteSchedule[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("schedules")
+    .select(
+      "id, route_id, status, departure_at, arrival_estimate_at, base_fare_kobo, boarding_address, boarding_contact_phone",
+    )
+    .order("departure_at", { ascending: true });
+  return (data ?? []) as RouteSchedule[];
+}
+
 export async function listManageableVehicleOptions() {
   const supabase = await createClient();
   const { data } = await supabase

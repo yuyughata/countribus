@@ -7,13 +7,21 @@ import { Card } from "@/components/ui/card";
 import { DashboardHeader } from "@/components/dashboard/page-header";
 import { RoutesManager } from "@/components/dashboard/routes-manager";
 import { requireDashboardCapability } from "@/lib/auth/guard";
-import { listRoutesWithTerminals, listTerminalOptions } from "@/features/schedules/queries";
+import {
+  listRoutesWithTerminals,
+  listSchedulesForRoutes,
+  listTerminalOptions,
+} from "@/features/schedules/queries";
 
 export const metadata = { title: "Route management" };
 
 export default async function RoutesPage() {
   await requireDashboardCapability("route:manage");
-  const [routes, terminals] = await Promise.all([listRoutesWithTerminals(), listTerminalOptions()]);
+  const [routes, terminals, schedules] = await Promise.all([
+    listRoutesWithTerminals(),
+    listTerminalOptions(),
+    listSchedulesForRoutes(),
+  ]);
 
   return (
     <div className="space-y-5 p-5">
@@ -43,7 +51,7 @@ export default async function RoutesPage() {
           </Link>
         </Card>
       ) : (
-        <RoutesManager routes={routes} terminals={terminals} />
+        <RoutesManager routes={routes} terminals={terminals} schedules={schedules} />
       )}
     </div>
   );

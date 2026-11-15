@@ -22,16 +22,22 @@ export const scheduleSchema = z
     departureAt: z.string().min(1, "Set a departure time"),
     arrivalEstimateAt: z.string().min(1, "Set an arrival estimate"),
     fareNaira: z.coerce.number().positive("Enter a fare").max(1_000_000),
-    boardingAddress: z
-      .string()
-      .trim()
-      .min(6, "Enter the boarding terminal address")
-      .max(200),
-    boardingContactPhone: z
-      .string()
-      .trim()
-      .min(7, "Enter a contact phone number")
-      .max(30),
+    boardingAddress: z.string().trim().min(6, "Enter the boarding terminal address").max(200),
+    boardingContactPhone: z.string().trim().min(7, "Enter a contact phone number").max(30),
+  })
+  .refine((d) => new Date(d.arrivalEstimateAt) > new Date(d.departureAt), {
+    message: "Arrival must be after departure",
+    path: ["arrivalEstimateAt"],
+  });
+
+/** Editable fields for an existing departure (route/vehicle are not changed). */
+export const scheduleEditSchema = z
+  .object({
+    departureAt: z.string().min(1, "Set a departure time"),
+    arrivalEstimateAt: z.string().min(1, "Set an arrival estimate"),
+    fareNaira: z.coerce.number().positive("Enter a fare").max(1_000_000),
+    boardingAddress: z.string().trim().min(6, "Enter the boarding terminal address").max(200),
+    boardingContactPhone: z.string().trim().min(7, "Enter a contact phone number").max(30),
   })
   .refine((d) => new Date(d.arrivalEstimateAt) > new Date(d.departureAt), {
     message: "Arrival must be after departure",
@@ -40,3 +46,4 @@ export const scheduleSchema = z
 
 export type RouteInput = z.infer<typeof routeSchema>;
 export type ScheduleInput = z.infer<typeof scheduleSchema>;
+export type ScheduleEditInput = z.infer<typeof scheduleEditSchema>;
