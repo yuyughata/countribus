@@ -34,19 +34,38 @@ function prettyDate(iso: string) {
   return iso === today ? `Today, ${label.replace(/^\w+,\s/, "")}` : label;
 }
 
-export function HeroSearch({ routes }: { routes: RouteOptions }) {
+export function HeroSearch({
+  routes,
+  initial,
+}: {
+  routes: RouteOptions;
+  initial?: { origin?: string; dest?: string; date?: string; pax?: string };
+}) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
 
   const origins = routes.origins;
-  const firstOrigin = origins[0]?.id ?? "";
+  // Resolve a valid starting origin/destination (honouring the URL when present
+  // and still bookable), so the widget pre-fills on the /search page.
+  const startOrigin =
+    initial?.origin && routes.destinationsByOrigin[initial.origin]
+      ? initial.origin
+      : (origins[0]?.id ?? "");
+  const startDests = routes.destinationsByOrigin[startOrigin] ?? [];
+  const startDest =
+    initial?.dest && startDests.some((d) => d.id === initial.dest)
+      ? initial.dest
+      : (startDests[0]?.id ?? "");
 
   const [trip, setTrip] = useState<"one_way" | "return">("one_way");
-  const [origin, setOrigin] = useState(firstOrigin);
-  const [dest, setDest] = useState((routes.destinationsByOrigin[firstOrigin] ?? [])[0]?.id ?? "");
-  const [date, setDate] = useState(today);
-  const [returnDate, setReturnDate] = useState(addDays(today, 2));
-  const [pax, setPax] = useState({ adults: 1, children: 0, infants: 0 });
+  const [origin, setOrigin] = useState(startOrigin);
+  const [dest, setDest] = useState(startDest);
+  const [date, setDate] = useState(initial?.date ?? today);
+  const [returnDate, setReturnDate] = useState(addDays(initial?.date ?? today, 2));
+  const [pax, setPax] = useState({
+    adults: Math.max(1, Math.min(10, Number(initial?.pax) || 1)),
+    children: 0,
+  });
   const [paxOpen, setPaxOpen] = useState(false);
 
   const seated = Math.max(1, pax.adults + pax.children);
@@ -54,7 +73,6 @@ export function HeroSearch({ routes }: { routes: RouteOptions }) {
     const parts: string[] = [];
     if (pax.adults) parts.push(`${pax.adults} Adult${pax.adults > 1 ? "s" : ""}`);
     if (pax.children) parts.push(`${pax.children} Child${pax.children > 1 ? "ren" : ""}`);
-    if (pax.infants) parts.push(`${pax.infants} Infant${pax.infants > 1 ? "s" : ""}`);
     return parts.join(", ") || "1 Adult";
   }, [pax]);
 
@@ -242,24 +260,17 @@ export function HeroSearch({ routes }: { routes: RouteOptions }) {
               <div className="border-border bg-surface absolute top-full left-0 z-30 mt-2 w-64 space-y-3 rounded-xl border p-3 shadow-[var(--shadow-pop)]">
                 <Stepper
                   label="Adults"
-                  hint="12+"
+                  hint="11+"
                   value={pax.adults}
                   min={0}
                   onChange={(v) => setPax({ ...pax, adults: v })}
                 />
                 <Stepper
                   label="Children"
-                  hint="6–10 · half fare"
+                  hint="1–8 · half fare"
                   value={pax.children}
                   min={0}
                   onChange={(v) => setPax({ ...pax, children: v })}
-                />
-                <Stepper
-                  label="Infants"
-                  hint="1–5 · free, on lap"
-                  value={pax.infants}
-                  min={0}
-                  onChange={(v) => setPax({ ...pax, infants: v })}
                 />
                 <Button
                   type="button"
