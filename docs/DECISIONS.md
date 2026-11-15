@@ -461,3 +461,28 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   owner-only rule config, per-staff override wins, accrual on paid, reversal on
   cancel, payout settles pending, performance aggregate, cross-vendor RLS) and
   applied live.
+
+## Daily reconciliation
+
+- **ADR-0038 Daily reconciliation as read-only aggregates; integrity, not a new
+  ledger.** Phase 3 (final) of the plan. `/dashboard/reconciliation` (finance:view)
+  shows, for a chosen day (Africa/Lagos window): online vs walk-in bookings and
+  revenue, total paid revenue and passengers, platform commission and operator
+  net, per-vehicle passenger totals for that day's departures, cumulative staff
+  sales + incentive balances, and any unreconciled transactions. Revenue is
+  recognised on the paid event (the `booking_gross` ledger entry's timestamp);
+  the online/walk-in split comes from `bookings.channel`. Three SECURITY DEFINER
+  functions back it — `reconciliation_summary`, `reconciliation_vehicles`,
+  `reconciliation_unreconciled` — authorized platform-wide for admins
+  (p_vendor NULL) and per-vendor for the owner/finance officer (or admin);
+  per-vehicle/staff sections are vendor-scoped, so the admin platform view omits
+  them. No new tables: duplicate seat allocation and duplicate payment records
+  are already prevented structurally (the `schedule_seats` partial unique index,
+  `payment_transactions` unique(provider, provider_reference), and the
+  `webhook_events` idempotency ledger), so reconciliation does not re-implement
+  them — it surfaces any gap as "unreconciled" (a successful payment whose
+  booking is not paid), which should always be zero in a healthy system.
+  Validated in `tests/db/phase13_reconciliation.sql` (6 checks: channel split +
+  revenue + commission/net + passengers, unreconciled count + detail, per-vehicle
+  loads, non-admin blocked from the platform view, cross-vendor blocked) and
+  applied live.

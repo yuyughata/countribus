@@ -2594,6 +2594,43 @@ export type Database = {
           incentive_total_kobo: number;
         }[];
       };
+      reconciliation_summary: {
+        Args: { p_vendor: string | null; p_date: string };
+        Returns: {
+          online_bookings: number;
+          online_revenue_kobo: number;
+          walkin_bookings: number;
+          walkin_revenue_kobo: number;
+          total_bookings: number;
+          total_revenue_kobo: number;
+          passengers: number;
+          commission_kobo: number;
+          vendor_net_kobo: number;
+          unreconciled: number;
+        }[];
+      };
+      reconciliation_vehicles: {
+        Args: { p_vendor: string; p_date: string };
+        Returns: {
+          vehicle_id: string;
+          registration_no: string;
+          display_name: string | null;
+          departures: number;
+          passengers: number;
+          capacity: number;
+        }[];
+      };
+      reconciliation_unreconciled: {
+        Args: { p_vendor: string | null; p_date: string };
+        Returns: {
+          reference: string;
+          provider: Database["public"]["Enums"]["payment_provider"];
+          amount_kobo: number;
+          payment_status: Database["public"]["Enums"]["payment_status"];
+          booking_status: Database["public"]["Enums"]["booking_status"];
+          verified_at: string;
+        }[];
+      };
       current_vendor_ids: { Args: never; Returns: string[] };
       declare_luggage: {
         Args: { p_booking: string; p_items: Json };
