@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { canForVendor, requireUser } from "@/lib/auth/context";
 import { nairaToKobo } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
-import { routeSchema, scheduleSchema } from "@/lib/validation/schedules";
+import { routeSchema, scheduleEditSchema, scheduleSchema } from "@/lib/validation/schedules";
 
 export type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -136,6 +136,44 @@ export async function deleteRoute(routeId: string): Promise<Result> {
   revalidatePath("/dashboard/routes");
   revalidatePath("/dashboard/schedules");
   return { ok: true, data: undefined };
+}
+
+export async function updateSchedule(
+  scheduleId: string,
+  input: unknown,
+): Promise<Result<{ scheduleId: string }>> {
+  const ctx = await requireUser();
+  const supabase = await createClient();
+  const { data: s } = await supabase
+    .from("schedules")
+    .select("vendor_id, status")
+    .eq("id", scheduleId)
+    .maybeSingle();
+  if (!s) return { ok: false, error: "Departure not found" };
+  if (!canForVendor(ctx, s.vendor_id, "schedule:manage")) {
+    return { ok: false, error: "Not allowed to manage schedules for this vendor" };
+  }
+  if (s.status === "cancelled") {
+    return { ok: false, error: "This departure is cancelled and can't be edited." };
+  }
+  const parsed = scheduleEditSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid departure" };
+  }
+  const { error } = await supabase
+    .from("schedules")
+    .update({
+      departure_at: new Date(parsed.data.departureAt).toISOString(),
+      arrival_estimate_at: new Date(parsed.data.arrivalEstimateAt).toISOString(),
+      base_fare_kobo: nairaToKobo(parsed.data.fareNaira),
+      boarding_address: parsed.data.boardingAddress,
+      boarding_contact_phone: parsed.data.boardingContactPhone,
+    })
+    .eq("id", scheduleId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/dashboard/routes");
+  revalidatePath("/dashboard/schedules");
+  return { ok: true, data: { scheduleId } };
 }
 
 export async function publishSchedule(scheduleId: string): Promise<Result> {
