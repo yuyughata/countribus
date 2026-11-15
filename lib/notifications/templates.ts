@@ -306,6 +306,26 @@ export function payoutSentEmail(d: {
 // ===========================================================================
 // Welcome (customer) & referral reward
 // ===========================================================================
+export function teamInviteEmail(d: {
+  vendorName: string;
+  roleLabel: string;
+  inviteUrl: string;
+}): EmailMessage {
+  return {
+    subject: `You're invited to join ${d.vendorName} on Countribus`,
+    text:
+      `You've been invited to join ${d.vendorName} on Countribus as ${d.roleLabel}. ` +
+      `Sign in or create your account with this email address to accept: ${d.inviteUrl} (expires in 14 days).`,
+    html: emailShell({
+      previewText: `Join ${d.vendorName} as ${d.roleLabel}.`,
+      heading: "You're invited 🎟️",
+      intro: `You've been invited to join ${d.vendorName} on Countribus as ${d.roleLabel}.`,
+      bodyHtml: `<p style="font-size:15px;line-height:1.55;color:#3d2a30">Sign in — or create an account — with <strong>this email address</strong> to accept. The invitation expires in 14 days.</p>`,
+      button: { label: "Accept invitation", url: d.inviteUrl },
+    }),
+  };
+}
+
 export function welcomeEmail(d: { name: string; searchUrl: string }): EmailMessage {
   return {
     subject: `Welcome to Countribus, ${d.name}!`,
