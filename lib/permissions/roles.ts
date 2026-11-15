@@ -55,6 +55,7 @@ export const CAPABILITIES = [
   "luggage:scan",
   "finance:view",
   "finance:manage",
+  "incentive:manage", // configure staff incentives + approve/record payments
   "payment:refund",
   "notification:send",
   "audit:view",
@@ -90,6 +91,7 @@ const MATRIX: Record<Role, readonly Capability[]> = {
     "boarding:scan",
     "luggage:scan",
     "finance:view",
+    "incentive:manage",
     "notification:send",
   ],
   vendor_manager: [

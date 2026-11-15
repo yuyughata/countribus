@@ -35,6 +35,15 @@ describe("permissions matrix", () => {
     expect(can("passenger", "booking:counter")).toBe(false);
   });
 
+  it("restricts staff-incentive management to vendor owner (+ super admin)", () => {
+    const allowed: Role[] = ["super_admin", "vendor_owner"];
+    for (const role of ROLES) {
+      expect(can(role, "incentive:manage")).toBe(allowed.includes(role));
+    }
+    expect(can("vendor_manager", "incentive:manage")).toBe(false);
+    expect(can("booking_officer", "incentive:manage")).toBe(false);
+  });
+
   it("lets terminal staff view (but not manage) vehicles", () => {
     expect(can("terminal_staff", "vehicle:view")).toBe(true);
     expect(can("terminal_staff", "vehicle:manage")).toBe(false);
