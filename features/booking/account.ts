@@ -27,7 +27,7 @@ export async function getBookingByReference(reference: string) {
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, reference, status, grand_total_kobo, contact_name, contact_phone, contact_email, schedule_id, vendors(name, contact_phone), schedules(departure_at, boarding_address, boarding_contact_phone, origin:origin_terminal_id(name, address), destination:destination_terminal_id(name))",
+      "id, reference, status, grand_total_kobo, contact_name, contact_phone, contact_email, terms_accepted_at, schedule_id, vendors(name, contact_phone), schedules(departure_at, boarding_address, boarding_contact_phone, origin:origin_terminal_id(name, address), destination:destination_terminal_id(name)), terms_agreement:terms_agreement_id(version), boarding_agreement:boarding_agreement_id(version)",
     )
     .eq("reference", reference)
     .maybeSingle();
@@ -35,7 +35,9 @@ export async function getBookingByReference(reference: string) {
 
   const { data: bps } = await supabase
     .from("booking_passengers")
-    .select("passenger_id, seat_label, fare_kobo, boarding_status, passenger_type, passengers(full_name)")
+    .select(
+      "passenger_id, seat_label, fare_kobo, boarding_status, passenger_type, passengers(full_name)",
+    )
     .eq("booking_id", (booking as { id: string }).id);
 
   const { data: tickets } = await supabase
@@ -52,6 +54,7 @@ export async function getBookingByReference(reference: string) {
       contact_name: string;
       contact_phone: string;
       contact_email: string | null;
+      terms_accepted_at: string | null;
       schedule_id: string;
       vendors: { name: string; contact_phone: string | null } | null;
       schedules: {
@@ -61,6 +64,8 @@ export async function getBookingByReference(reference: string) {
         origin: { name: string; address: string | null } | null;
         destination: { name: string } | null;
       } | null;
+      terms_agreement: { version: number } | null;
+      boarding_agreement: { version: number } | null;
     },
     passengers: (bps ?? []) as unknown as {
       passenger_id: string;
