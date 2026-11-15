@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/dashboard/agreements/partner", label: "Partner agreement" },
   { href: "/dashboard/agreements/boarding", label: "Boarding policy" },
+  { href: "/dashboard/agreements/terms", label: "Terms & conditions" },
+  { href: "/dashboard/agreements/privacy", label: "Privacy policy" },
 ];
 
 export function AgreementTabs() {

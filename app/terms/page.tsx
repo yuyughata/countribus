@@ -1,10 +1,17 @@
-import Link from "next/link";
-
 import { SiteFooter, SiteHeader } from "@/components/marketing/site-chrome";
+import { getCurrentAgreement } from "@/features/agreements/queries";
 
 export const metadata = { title: "Terms & Conditions" };
 
-export default function TermsPage() {
+function paras(body: string) {
+  return body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+export default async function TermsPage() {
+  const agreement = await getCurrentAgreement("terms").catch(() => null);
   return (
     <>
       <SiteHeader />
@@ -19,50 +26,34 @@ export default function TermsPage() {
           <h1 className="font-display text-foreground mt-2 text-3xl font-semibold tracking-tight">
             Terms &amp; Conditions
           </h1>
+          {agreement && (
+            <p className="text-subtle mt-1 text-xs">
+              Version {agreement.version} · updated{" "}
+              {new Date(agreement.published_at).toLocaleDateString("en-NG")}
+            </p>
+          )}
         </div>
 
-        <div className="text-muted space-y-5 text-sm leading-relaxed">
-          <p>
-            Countribus is a marketplace that connects travellers with verified intercity bus
-            operators. When you book, you enter into a transport contract with the operator;
-            Countribus provides the booking, payment and ticketing service.
+        {!agreement ? (
+          <p className="text-muted text-sm">
+            The terms &amp; conditions will be published shortly.
           </p>
-          <section>
-            <h2 className="text-foreground text-base font-semibold">Bookings &amp; payment</h2>
-            <p className="mt-1">
-              Fares are shown per seat and confirmed at checkout. A booking is only confirmed once
-              payment is verified. You&apos;ll receive a digital ticket by email; present it (with
-              ID) at the terminal.
-            </p>
-          </section>
-          <section>
-            <h2 className="text-foreground text-base font-semibold">Boarding</h2>
-            <p className="mt-1">
-              Boarding, luggage, punctuality, conduct, and changes are governed by our{" "}
-              <Link href="/boarding-policy" className="text-primary font-medium">
-                Boarding Policy
-              </Link>
-              , which you accept when completing a booking.
-            </p>
-          </section>
-          <section>
-            <h2 className="text-foreground text-base font-semibold">Cancellations &amp; refunds</h2>
-            <p className="mt-1">
-              Cancellations and refunds follow the operator&apos;s policy and the platform terms.
-              Where a refund is due, it is returned to your original payment method.
-            </p>
-          </section>
-          <section>
-            <h2 className="text-foreground text-base font-semibold">Conduct &amp; liability</h2>
-            <p className="mt-1">
-              Please travel respectfully and follow crew instructions. Operators are responsible for
-              the transport service; Countribus is responsible for the booking platform.
-            </p>
-          </section>
-          <p className="text-subtle text-xs">
-            For questions, contact Countribus support. These terms may be updated from time to time.
-          </p>
-        </div>
+        ) : (
+          <div className="space-y-6">
+            {agreement.content.map((c, i) => (
+              <section key={i}>
+                <h2 className="text-foreground text-lg font-semibold">
+                  {i + 1}. {c.title}
+                </h2>
+                <div className="text-muted mt-2 space-y-2 text-sm leading-relaxed">
+                  {paras(c.body).map((p, j) => (
+                    <p key={j}>{p}</p>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
       </main>
       <SiteFooter />
     </>

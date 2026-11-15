@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-export type AgreementKind = "partner" | "boarding";
+export type AgreementKind = "partner" | "boarding" | "terms" | "privacy";
 
 export type Clause = {
   id: string;
