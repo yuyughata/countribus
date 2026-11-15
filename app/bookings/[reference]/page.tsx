@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
 import { ResumePaymentButton } from "@/components/booking/resume-payment-button";
+import { ReviewForm } from "@/components/booking/review-form";
+import { Stars } from "@/components/support/ticket-workspace";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { PoweredBy } from "@/components/brand/logo";
 import { getAuthContext } from "@/lib/auth/context";
@@ -17,6 +19,7 @@ import { formatKobo } from "@/lib/money";
 import { PASSENGER_TYPE_LABEL } from "@/lib/booking/passenger-types";
 import { BOOKING_STATUS_TONE, bookingStatusLabel } from "@/lib/booking/status";
 import { getBookingByReference } from "@/features/booking/account";
+import { getBookingReview } from "@/features/reviews/queries";
 
 export const metadata = { title: "Booking" };
 
@@ -32,6 +35,7 @@ export default async function BookingDetailPage({
   const data = await getBookingByReference(reference);
   if (!data) notFound();
   const { booking, passengers, tickets } = data;
+  const review = booking.status === "paid" ? await getBookingReview(booking.id) : null;
 
   const appUrl = publicEnv().NEXT_PUBLIC_APP_URL;
   const qrByToken: Record<string, string> = {};
@@ -220,6 +224,31 @@ export default async function BookingDetailPage({
             })}
           </div>
         </div>
+
+        {booking.status === "paid" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Rate your trip</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {review ? (
+                <div className="space-y-1">
+                  <Stars value={review.rating} />
+                  {review.comment && <p className="text-muted text-sm">{review.comment}</p>}
+                  <p className="text-subtle text-xs">Thanks for your feedback.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-muted mb-2 text-sm">
+                    How was {booking.vendors?.name ?? "your operator"}? Your rating helps other
+                    travellers.
+                  </p>
+                  <ReviewForm bookingId={booking.id} />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-center pt-2">
           <PoweredBy />

@@ -64,6 +64,7 @@ export function SiteFooter() {
               links={[
                 ["Sign in", "/login"],
                 ["Create an account", "/register"],
+                ["Support", "/support"],
               ]}
             />
           </div>
