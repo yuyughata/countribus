@@ -10,11 +10,7 @@ import { fieldClass as field } from "@/components/ui/field";
 import { createBookingAndPay } from "@/features/booking/checkout";
 import { previewPromoCode } from "@/features/promotions/actions";
 import { formatKobo } from "@/lib/money";
-import {
-  SEATED_TYPE_OPTIONS,
-  fareForSeatedType,
-  type SeatedType,
-} from "@/lib/booking/passenger-types";
+import { fareForSeatedType, type SeatedType } from "@/lib/booking/passenger-types";
 import type { SeatCell } from "@/features/booking/queries";
 import type { PaymentProvider } from "@/lib/supabase/database.types";
 
@@ -42,17 +38,18 @@ export function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
   const [hold, setHold] = useState<Hold | null>(null);
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
-  const [provider, setProvider] = useState<PaymentProvider>("paystack");
+  // Paystack is the only payment provider for now.
+  const provider: PaymentProvider = "paystack";
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discountKobo: number } | null>(null);
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [useReward, setUseReward] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
-  const [pax, setPax] = useState<
-    Record<string, { full_name: string; phone: string; type: SeatedType }>
-  >({});
-  const [bags, setBags] = useState<Record<string, number>>({});
+  const [seated, setSeated] = useState<{ full_name: string; phone: string; type: SeatedType }[]>(
+    [],
+  );
+  const [bagCount, setBagCount] = useState(0);
   const [infants, setInfants] = useState<{ full_name: string }[]>([]);
 
   useEffect(() => {
@@ -77,9 +74,22 @@ export function CheckoutForm({
     );
   }
 
+  const seatIds = hold.seatIds;
+  const maxSeats = seatIds.length;
   const seatBase = (id: string) => fareKobo + (hold.surcharges?.[id] ?? 0);
-  const typeOf = (id: string): SeatedType => pax[id]?.type ?? "adult";
-  const total = hold.seatIds.reduce((s, id) => s + fareForSeatedType(typeOf(id), seatBase(id)), 0);
+  const total = seated.reduce((s, p, i) => s + fareForSeatedType(p.type, seatBase(seatIds[i])), 0);
+  const allSeatsAssigned = seated.length === maxSeats && seated.every((p) => p.full_name.trim());
+
+  function addSeated(type: SeatedType) {
+    if (seated.length >= maxSeats) return;
+    setSeated([...seated, { full_name: "", phone: "", type }]);
+  }
+  function updateSeated(i: number, patch: Partial<(typeof seated)[number]>) {
+    setSeated(seated.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  }
+  function removeSeated(i: number) {
+    setSeated(seated.filter((_, j) => j !== i));
+  }
 
   const rewardDiscount =
     !promo && useReward && availableRewardPercent
@@ -112,16 +122,26 @@ export function CheckoutForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const passengers = hold!.seatIds.map((seat_id) => ({
-      seat_id,
-      full_name: pax[seat_id]?.full_name ?? "",
-      phone: pax[seat_id]?.phone ?? "",
-      type: typeOf(seat_id),
+    if (seated.length !== maxSeats) {
+      setError(`Add a passenger for each of your ${maxSeats} seat${maxSeats > 1 ? "s" : ""}.`);
+      return;
+    }
+    const passengers = seated.map((p, i) => ({
+      seat_id: seatIds[i],
+      full_name: p.full_name,
+      phone: p.phone,
+      type: p.type,
     }));
     const cleanInfants = infants.filter((i) => i.full_name.trim());
     if (cleanInfants.some((i) => !i.full_name.trim())) return;
-    const luggage = hold!.seatIds
-      .map((seat_id) => ({ seat_id, type: "medium_bag", quantity: bags[seat_id] ?? 0 }))
+    // Spread the total bags evenly across seats so each passenger's first (free)
+    // bag still applies, then declare per seat.
+    const luggage = seatIds
+      .map((seat_id, i) => ({
+        seat_id,
+        type: "medium_bag",
+        quantity: Math.floor(bagCount / maxSeats) + (i < bagCount % maxSeats ? 1 : 0),
+      }))
       .filter((l) => l.quantity > 0);
     start(async () => {
       const r = await createBookingAndPay({
@@ -181,94 +201,97 @@ export function CheckoutForm({
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-foreground text-sm font-semibold">Passengers (one per seat)</h3>
-        {hold.seatIds.map((id) => {
-          const t = typeOf(id);
-          return (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-foreground text-sm font-semibold">
+            Passengers{" "}
+            <span className="text-subtle font-normal">
+              — {seated.length} of {maxSeats} seat{maxSeats > 1 ? "s" : ""} assigned
+            </span>
+          </h3>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={seated.length >= maxSeats}
+              onClick={() => addSeated("adult")}
+            >
+              <Plus className="size-4" /> Add adult
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={seated.length >= maxSeats}
+              onClick={() => addSeated("child_6_10")}
+            >
+              <Plus className="size-4" /> Add child
+            </Button>
+          </div>
+        </div>
+
+        {seated.length === 0 ? (
+          <p className="text-subtle text-xs">
+            Add an adult or child for each of your {maxSeats} seat{maxSeats > 1 ? "s" : ""}.
+          </p>
+        ) : (
+          seated.map((p, i) => (
             <div
-              key={id}
-              className="grid gap-3 sm:grid-cols-[56px_1fr_150px_1fr_76px] sm:items-center"
+              key={i}
+              className="grid gap-3 sm:grid-cols-[56px_1fr_120px_1fr_76px_32px] sm:items-center"
             >
               <span className="bg-brand-ink inline-flex h-10 items-center justify-center rounded-md text-sm font-semibold text-white">
-                {labelFor(id)}
+                {labelFor(seatIds[i])}
               </span>
               <input
                 className={field}
                 required
                 placeholder="Passenger name"
-                value={pax[id]?.full_name ?? ""}
-                onChange={(e) =>
-                  setPax({
-                    ...pax,
-                    [id]: {
-                      full_name: e.target.value,
-                      phone: pax[id]?.phone ?? "",
-                      type: t,
-                    },
-                  })
-                }
+                value={p.full_name}
+                onChange={(e) => updateSeated(i, { full_name: e.target.value })}
               />
-              <select
-                className={field}
-                value={t}
-                aria-label="Passenger type"
-                onChange={(e) =>
-                  setPax({
-                    ...pax,
-                    [id]: {
-                      full_name: pax[id]?.full_name ?? "",
-                      phone: pax[id]?.phone ?? "",
-                      type: e.target.value as SeatedType,
-                    },
-                  })
-                }
-              >
-                {SEATED_TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <span className="bg-surface-muted text-muted inline-flex h-10 items-center justify-center rounded-md px-2 text-center text-xs font-medium">
+                {p.type === "adult" ? "Adult" : "Child (6–10)"}
+              </span>
               <input
                 className={field}
                 placeholder="Phone (optional)"
-                value={pax[id]?.phone ?? ""}
-                onChange={(e) =>
-                  setPax({
-                    ...pax,
-                    [id]: {
-                      full_name: pax[id]?.full_name ?? "",
-                      phone: e.target.value,
-                      type: t,
-                    },
-                  })
-                }
+                value={p.phone}
+                onChange={(e) => updateSeated(i, { phone: e.target.value })}
               />
               <span className="text-foreground text-right text-sm font-medium sm:text-center">
-                {formatKobo(fareForSeatedType(t, seatBase(id)))}
+                {formatKobo(fareForSeatedType(p.type, seatBase(seatIds[i])))}
               </span>
+              <button
+                type="button"
+                aria-label="Remove passenger"
+                className="text-subtle hover:text-danger justify-self-center"
+                onClick={() => removeSeated(i)}
+              >
+                <X className="size-4" />
+              </button>
             </div>
-          );
-        })}
-        <div className="grid gap-3 sm:grid-cols-[56px_1fr_150px_1fr_76px] sm:items-center">
-          <span className="text-subtle text-xs sm:col-span-2">Checked bags per seat →</span>
-        </div>
-        {hold.seatIds.map((id) => (
-          <div key={`bag-${id}`} className="flex items-center gap-3 text-sm">
-            <span className="text-muted w-14">{labelFor(id)}</span>
-            <input
-              className={`${field} max-w-[90px]`}
-              type="number"
-              min={0}
-              max={10}
-              title="Checked bags"
-              placeholder="Bags"
-              value={bags[id] ?? 0}
-              onChange={(e) => setBags({ ...bags, [id]: Math.max(0, Number(e.target.value) || 0) })}
-            />
-            <span className="text-subtle text-xs">checked bag(s)</span>
-          </div>
-        ))}
+          ))
+        )}
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="text-foreground text-sm font-semibold">Luggage</h3>
+        <label className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="text-muted">Number of bags in your luggage</span>
+          <input
+            className={`${field} max-w-[110px]`}
+            type="number"
+            min={0}
+            max={50}
+            inputMode="numeric"
+            placeholder="0"
+            title="Number of bags"
+            value={bagCount ? String(bagCount) : ""}
+            onChange={(e) => setBagCount(Math.max(0, Math.min(50, Number(e.target.value) || 0)))}
+          />
+          <span className="text-subtle text-xs">bag(s)</span>
+        </label>
         <p className="text-subtle text-xs">
           First bag per passenger is free; extra bags are charged per the operator&apos;s policy.
         </p>
@@ -376,17 +399,10 @@ export function CheckoutForm({
       </section>
 
       <section className="flex flex-wrap items-end justify-between gap-3">
-        <label className="text-muted space-y-1 text-xs font-medium">
+        <div className="text-muted space-y-1 text-xs font-medium">
           Pay with
-          <select
-            className={field}
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as PaymentProvider)}
-          >
-            <option value="paystack">Paystack</option>
-            <option value="flutterwave">Flutterwave</option>
-          </select>
-        </label>
+          <div className={`${field} flex max-w-[200px] items-center font-semibold`}>Paystack</div>
+        </div>
         <div className="space-y-0.5 text-right">
           {discount > 0 && (
             <>
@@ -425,10 +441,13 @@ export function CheckoutForm({
 
       {error && <p className="bg-danger-soft text-danger rounded-md px-3 py-2 text-sm">{error}</p>}
 
-      <Button type="submit" className="w-full" size="lg" disabled={pending || !agreedTerms}>
-        {pending
-          ? "Processing…"
-          : `Pay securely with ${provider === "paystack" ? "Paystack" : "Flutterwave"} · ${formatKobo(grandTotal)}`}
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={pending || !agreedTerms || !allSeatsAssigned}
+      >
+        {pending ? "Processing…" : `Pay securely with Paystack · ${formatKobo(grandTotal)}`}
       </Button>
     </form>
   );
