@@ -25,6 +25,16 @@ describe("permissions matrix", () => {
     expect(can("passenger", "vehicle:manage")).toBe(false);
   });
 
+  it("restricts walk-in counter sales to owner/manager/booking officer (+ super admin)", () => {
+    const allowed: Role[] = ["super_admin", "vendor_owner", "vendor_manager", "booking_officer"];
+    for (const role of ROLES) {
+      expect(can(role, "booking:counter")).toBe(allowed.includes(role));
+    }
+    // Terminal staff and passengers must never record counter bookings.
+    expect(can("terminal_staff", "booking:counter")).toBe(false);
+    expect(can("passenger", "booking:counter")).toBe(false);
+  });
+
   it("lets terminal staff view (but not manage) vehicles", () => {
     expect(can("terminal_staff", "vehicle:view")).toBe(true);
     expect(can("terminal_staff", "vehicle:manage")).toBe(false);

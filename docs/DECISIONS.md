@@ -405,3 +405,30 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   the live policy, and the boarding policy is appended to every booking
   confirmation email. Verified end-to-end (sign → counter-sign → PDF 200) and the
   version-bump/dedup with a local DB test.
+
+## Walk-in (counter) bookings
+
+- **ADR-0036 Counter sales set `paid` outside the webhook rule — deliberately,
+  audited and capability-gated.** The core invariant is that a booking becomes
+  `paid` only from a verified provider webhook (`confirm_payment`, service-role
+  only). A walk-in sale at a terminal is taken in cash, by POS card or by bank
+  transfer and has **no provider webhook**, so it needs a second, controlled path
+  to `paid`. `create_walkin_booking` (SECURITY DEFINER) is that single path. It
+  is justified because: (a) it is restricted inside the function to the schedule's
+  vendor owner/manager/booking officer (or platform admin) via `has_vendor_role`
+  — the same gate as the rest of the booking RPCs, mirrored by the new
+  `booking:counter` capability and the `/dashboard/walk-in` page/nav guard;
+  (b) prices are computed server-side from `schedules.base_fare_kobo` + seat
+  surcharge and the passenger type (client never supplies a fare); (c) seats are
+  claimed with the same concurrency-safe `available -> booked` UPDATE the online
+  flow uses, backed by the `schedule_seats` partial unique index, so a seat can
+  never be double-sold across channels; (d) every sale is audited — the status
+  history records who recorded it and the method, and a one-per-booking
+  `counter_payments` row (unique on `booking_id`) captures method, amount and the
+  staff member who took the money, preventing a duplicate payment record. Online
+  payments remain webhook-only and untouched. New columns `bookings.channel`
+  (`online`/`walk_in`) and `bookings.sold_by` attribute the sale for staff-sales
+  incentives (a later phase). Validated on the full local migration chain
+  (`tests/db/phase11_walkin.sql`: passenger denied, cross-vendor denied, officer
+  succeeds, ledger/tickets/counter-payment created, double-sell blocked, duplicate
+  payment blocked, cross-vendor RLS) and applied live.

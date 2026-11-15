@@ -45,6 +45,7 @@ export const CAPABILITIES = [
   "schedule:manage",
   "schedule:publish",
   "booking:create",
+  "booking:counter", // record a walk-in (counter) booking + take counter payment
   "booking:manage", // cancel/reissue under policy
   "booking:view", // view bookings/manifests for own vendor
   "manifest:view",
@@ -80,6 +81,7 @@ const MATRIX: Record<Role, readonly Capability[]> = {
     "schedule:manage",
     "schedule:publish",
     "booking:create",
+    "booking:counter",
     "booking:manage",
     "booking:view",
     "manifest:view",
@@ -97,6 +99,7 @@ const MATRIX: Record<Role, readonly Capability[]> = {
     "schedule:manage",
     "schedule:publish",
     "booking:create",
+    "booking:counter",
     "booking:manage",
     "booking:view",
     "manifest:view",
@@ -108,6 +111,7 @@ const MATRIX: Record<Role, readonly Capability[]> = {
   ],
   booking_officer: [
     "booking:create",
+    "booking:counter",
     "booking:manage",
     "booking:view",
     "vehicle:view",
