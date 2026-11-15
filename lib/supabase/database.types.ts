@@ -2020,6 +2020,110 @@ export type Database = {
           },
         ];
       };
+      support_tickets: {
+        Row: {
+          author_kind: string;
+          booking_id: string | null;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          status: string;
+          subject: string;
+          updated_at: string;
+          vendor_id: string | null;
+        };
+        Insert: {
+          author_kind: string;
+          booking_id?: string | null;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          status?: string;
+          subject: string;
+          updated_at?: string;
+          vendor_id?: string | null;
+        };
+        Update: {
+          author_kind?: string;
+          booking_id?: string | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          vendor_id?: string | null;
+        };
+        Relationships: [];
+      };
+      support_messages: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          created_at: string;
+          id: string;
+          is_admin: boolean;
+          ticket_id: string;
+        };
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+          id?: string;
+          is_admin?: boolean;
+          ticket_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          is_admin?: boolean;
+          ticket_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "support_tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vendor_reviews: {
+        Row: {
+          booking_id: string;
+          comment: string | null;
+          created_at: string;
+          id: string;
+          rating: number;
+          user_id: string;
+          vendor_id: string;
+        };
+        Insert: {
+          booking_id: string;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          user_id: string;
+          vendor_id: string;
+        };
+        Update: {
+          booking_id?: string;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          user_id?: string;
+          vendor_id?: string;
+        };
+        Relationships: [];
+      };
       vendor_invitations: {
         Row: {
           accepted_at: string | null;
@@ -2263,6 +2367,18 @@ export type Database = {
       expire_overdue_bookings: {
         Args: Record<PropertyKey, never>;
         Returns: number;
+      };
+      vendor_health: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          vendor_id: string;
+          vendor_name: string;
+          avg_rating: number;
+          review_count: number;
+          complaint_count: number;
+          open_complaints: number;
+          flagged: boolean;
+        }[];
       };
       confirm_payment: {
         Args: {

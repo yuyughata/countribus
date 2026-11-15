@@ -22,6 +22,7 @@ export const DASHBOARD_NAV_CAP: Record<string, Capability | null> = {
   "/dashboard/communications": "platform:manage",
   "/dashboard/agreements": "platform:manage",
   "/dashboard/agreement": "vendor:manage_own",
+  "/dashboard/support": null,
   "/dashboard/activity": "audit:view",
   "/dashboard/permissions": "staff:manage",
   "/dashboard/settings": "vendor:manage_own",
