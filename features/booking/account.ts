@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function listMyBookings(userId: string) {
   const supabase = await createClient();
+  // Sweep overdue unpaid bookings so statuses are current on every view.
+  await supabase.rpc("expire_overdue_bookings");
   const { data } = await supabase
     .from("bookings")
     .select(
@@ -24,10 +26,12 @@ export async function listMyBookings(userId: string) {
 
 export async function getBookingByReference(reference: string) {
   const supabase = await createClient();
+  // Sweep overdue unpaid bookings so this one reflects an expiry immediately.
+  await supabase.rpc("expire_overdue_bookings");
   const { data: booking } = await supabase
     .from("bookings")
     .select(
-      "id, reference, status, grand_total_kobo, contact_name, contact_phone, contact_email, terms_accepted_at, schedule_id, vendors(name, contact_phone), schedules(departure_at, boarding_address, boarding_contact_phone, origin:origin_terminal_id(name, address), destination:destination_terminal_id(name)), terms_agreement:terms_agreement_id(version), boarding_agreement:boarding_agreement_id(version)",
+      "id, reference, status, grand_total_kobo, payment_deadline, contact_name, contact_phone, contact_email, terms_accepted_at, schedule_id, vendors(name, contact_phone), schedules(departure_at, boarding_address, boarding_contact_phone, origin:origin_terminal_id(name, address), destination:destination_terminal_id(name)), terms_agreement:terms_agreement_id(version), boarding_agreement:boarding_agreement_id(version)",
     )
     .eq("reference", reference)
     .maybeSingle();
@@ -51,6 +55,7 @@ export async function getBookingByReference(reference: string) {
       reference: string;
       status: string;
       grand_total_kobo: number;
+      payment_deadline: string;
       contact_name: string;
       contact_phone: string;
       contact_email: string | null;

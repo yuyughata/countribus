@@ -8,24 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
+import { ResumePaymentButton } from "@/components/booking/resume-payment-button";
 import { SiteHeader } from "@/components/marketing/site-chrome";
 import { PoweredBy } from "@/components/brand/logo";
 import { getAuthContext } from "@/lib/auth/context";
 import { publicEnv } from "@/lib/env";
 import { formatKobo } from "@/lib/money";
 import { PASSENGER_TYPE_LABEL } from "@/lib/booking/passenger-types";
+import { BOOKING_STATUS_TONE, bookingStatusLabel } from "@/lib/booking/status";
 import { getBookingByReference } from "@/features/booking/account";
 
 export const metadata = { title: "Booking" };
-
-const tone: Record<string, "warning" | "success" | "danger" | "neutral"> = {
-  pending_payment: "warning",
-  paid: "success",
-  cancelled: "danger",
-  refunded: "neutral",
-  failed: "danger",
-  expired: "neutral",
-};
 
 export default async function BookingDetailPage({
   params,
@@ -78,8 +71,8 @@ export default async function BookingDetailPage({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               {booking.reference}
-              <Badge tone={tone[booking.status] ?? "neutral"}>
-                {booking.status.replace("_", " ")}
+              <Badge tone={BOOKING_STATUS_TONE[booking.status] ?? "neutral"}>
+                {bookingStatusLabel(booking.status)}
               </Badge>
             </CardTitle>
             {(booking.status === "pending_payment" || booking.status === "paid") && (
@@ -149,8 +142,32 @@ export default async function BookingDetailPage({
             )}
 
             {booking.status === "pending_payment" && (
-              <p className="text-warning">
-                Payment pending — your seats are held while you complete payment.
+              <div className="border-border space-y-3 border-t pt-4">
+                <p className="text-warning text-sm">
+                  Unpaid — your seats are held until{" "}
+                  <span className="font-semibold">
+                    {new Date(booking.payment_deadline).toLocaleTimeString("en-NG", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  . Complete payment before then, or the booking is automatically cancelled.
+                </p>
+                <ResumePaymentButton
+                  reference={booking.reference}
+                  amountKobo={booking.grand_total_kobo}
+                />
+              </div>
+            )}
+
+            {booking.status === "expired" && (
+              <p className="text-muted border-border border-t pt-3 text-sm">
+                This booking expired because payment wasn&apos;t completed within 30 minutes and the
+                seats were released.{" "}
+                <Link href="/search" className="text-primary font-medium">
+                  Book again
+                </Link>
+                .
               </p>
             )}
           </CardContent>
