@@ -1,9 +1,13 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/context";
+import { publicEnv, serverEnv } from "@/lib/env";
+import { formatKobo } from "@/lib/money";
+import { sendEmail } from "@/lib/notifications/email";
+import { initializePayment } from "@/lib/payments/providers";
 import { can } from "@/lib/permissions/roles";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { CounterMethod } from "@/lib/supabase/database.types";
 
 export type WalkinSeat = {
   seat_id: string;
@@ -26,7 +30,6 @@ export async function loadWalkinSeatMap(scheduleId: string): Promise<WalkinSeat[
 
 export type WalkinInput = {
   scheduleId: string;
-  method: CounterMethod;
   contact: { name: string; phone: string; email?: string };
   passengers: {
     seat_id: string;
@@ -36,20 +39,30 @@ export type WalkinInput = {
   }[];
   /** Lap infants (child 1–5): free, no seat. */
   infants?: { full_name: string }[];
-  /** Optional staff/receipt reference; defaults to the booking reference. */
-  receiptRef?: string;
 };
 
 export type WalkinResult =
-  | { ok: true; reference: string; amountKobo: number }
+  | {
+      ok: true;
+      reference: string;
+      amountKobo: number;
+      paymentUrl: string | null;
+      emailed: boolean;
+      note?: string;
+    }
   | { ok: false; error: string };
 
 /**
- * Record a walk-in (counter) booking: create the booking and take payment in
- * one atomic server step. Prices are computed server-side by the RPC; the
- * client never supplies a fare. Authorization is enforced in the database
- * (`create_walkin_booking` requires owner/manager/booking-officer on the
- * schedule's vendor, or platform admin) and re-checked here for a clean error.
+ * Record a walk-in (counter) booking. Creates a PENDING booking attributed to
+ * the acting staff member (channel='walk_in', sold_by), then opens the normal
+ * payment link (Paystack — card or bank transfer). The booking becomes paid
+ * only from the verified provider webhook, exactly like an online booking. The
+ * passenger is emailed the payment link; the staff member also gets it to share
+ * or to read the bank-transfer account details.
+ *
+ * Authorization is enforced in the database (`create_walkin_booking` requires
+ * owner/manager/booking-officer on the schedule's vendor, or platform admin)
+ * and re-checked here for a clean early error. Prices are computed server-side.
  */
 export async function createWalkInBooking(input: WalkinInput): Promise<WalkinResult> {
   const ctx = await requireUser();
@@ -72,22 +85,91 @@ export async function createWalkInBooking(input: WalkinInput): Promise<WalkinRes
   }
 
   const infants = (input.infants ?? []).filter((i) => i.full_name.trim());
+  const contactEmail = input.contact.email?.trim() || undefined;
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_walkin_booking", {
     p_schedule: input.scheduleId,
-    p_contact: input.contact,
+    p_contact: { name: input.contact.name, phone: input.contact.phone, email: contactEmail },
     p_passengers: input.passengers,
     p_infants: infants,
-    p_method: input.method,
-    p_receipt_ref: input.receiptRef?.trim() || undefined,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    const m = /PROMO:(.+)/.exec(error.message);
+    return { ok: false, error: m ? m[1].trim() : error.message };
+  }
 
-  const row = (data as { reference: string; amount_kobo: number }[])[0];
-  if (!row) return { ok: false, error: "Could not create the walk-in booking" };
+  const booking = (data as { booking_id: string; reference: string; amount_kobo: number }[])[0];
+  if (!booking) return { ok: false, error: "Could not create the walk-in booking" };
 
   const { revalidatePath } = await import("next/cache");
   revalidatePath("/dashboard/walk-in");
-  return { ok: true, reference: row.reference, amountKobo: row.amount_kobo };
+
+  // Open the payment link. Needs server secrets (service role + provider key).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return {
+      ok: true,
+      reference: booking.reference,
+      amountKobo: booking.amount_kobo,
+      paymentUrl: null,
+      emailed: false,
+      note: "Booking held. Payments aren't configured in this environment yet.",
+    };
+  }
+
+  const env = serverEnv();
+  const appUrl = publicEnv().NEXT_PUBLIC_APP_URL;
+  const init = await initializePayment(
+    "paystack",
+    {
+      paystackSecret: env.PAYSTACK_SECRET_KEY,
+      flutterwaveSecret: env.FLUTTERWAVE_SECRET_KEY,
+      flutterwaveHash: env.FLUTTERWAVE_WEBHOOK_HASH,
+    },
+    {
+      amountKobo: booking.amount_kobo,
+      email: contactEmail ?? ctx.email ?? "",
+      reference: booking.reference,
+      callbackUrl: `${appUrl}/bookings/${booking.reference}`,
+    },
+  );
+  if (!init.ok) {
+    return {
+      ok: true,
+      reference: booking.reference,
+      amountKobo: booking.amount_kobo,
+      paymentUrl: null,
+      emailed: false,
+      note: init.error,
+    };
+  }
+
+  const admin = createAdminClient();
+  await admin.from("payment_transactions").insert({
+    booking_id: booking.booking_id,
+    provider: "paystack",
+    provider_reference: booking.reference,
+    amount_kobo: booking.amount_kobo,
+  });
+
+  // Email the payment link to the passenger (best-effort; no account needed to pay).
+  let emailed = false;
+  if (contactEmail) {
+    const amount = formatKobo(booking.amount_kobo);
+    const res = await sendEmail({
+      to: contactEmail,
+      subject: `Complete your Countribus booking ${booking.reference}`,
+      text: `Hello ${input.contact.name},\n\nYour booking ${booking.reference} is reserved. Please complete payment of ${amount} to confirm your seat(s):\n${init.checkoutUrl}\n\nYou can pay by card or bank transfer. Your seats are held for 30 minutes.\n\nCountribus`,
+      html: `<p>Hello ${input.contact.name},</p><p>Your booking <strong>${booking.reference}</strong> is reserved. Please complete payment of <strong>${amount}</strong> to confirm your seat(s):</p><p><a href="${init.checkoutUrl}">Pay now</a></p><p>You can pay by card or bank transfer. Your seats are held for 30 minutes.</p><p>Countribus</p>`,
+    });
+    emailed = res.ok;
+  }
+
+  return {
+    ok: true,
+    reference: booking.reference,
+    amountKobo: booking.amount_kobo,
+    paymentUrl: init.checkoutUrl,
+    emailed,
+  };
 }

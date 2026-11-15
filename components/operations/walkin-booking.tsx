@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 
-import { Armchair, Plus, Ticket, Trash2, UserPlus } from "lucide-react";
+import { Armchair, Check, Copy, ExternalLink, Trash2, UserPlus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,15 +16,22 @@ import {
   type WalkinSeat,
 } from "@/features/walkin/actions";
 import type { WalkinSchedule } from "@/features/walkin/queries";
-import type { CounterMethod } from "@/lib/supabase/database.types";
 
-type Pax = { seat_id: string; seat_label: string; full_name: string; phone: string; type: "adult" | "child_6_10" };
+type Pax = {
+  seat_id: string;
+  seat_label: string;
+  full_name: string;
+  phone: string;
+  type: "adult" | "child_6_10";
+};
 
-const METHODS: { value: CounterMethod; label: string }[] = [
-  { value: "cash", label: "Cash" },
-  { value: "pos", label: "POS card" },
-  { value: "transfer", label: "Bank transfer" },
-];
+type Done = {
+  reference: string;
+  amountKobo: number;
+  paymentUrl: string | null;
+  emailed: boolean;
+  note?: string;
+};
 
 export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
   const [scheduleId, setScheduleId] = useState("");
@@ -33,11 +39,11 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
   const [pax, setPax] = useState<Pax[]>([]);
   const [infants, setInfants] = useState<{ full_name: string }[]>([]);
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
-  const [method, setMethod] = useState<CounterMethod>("cash");
   const [loadingSeats, startSeats] = useTransition();
   const [submitting, startSubmit] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ reference: string; amountKobo: number } | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const schedule = schedules.find((s) => s.id === scheduleId) ?? null;
   const baseFare = schedule?.base_fare_kobo ?? 0;
@@ -57,7 +63,6 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
     setSeats([]);
     setPax([]);
     setInfants([]);
-    setDone(null);
     setError(null);
     if (!id) return;
     startSeats(async () => {
@@ -68,8 +73,9 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
   function toggleSeat(seat: WalkinSeat) {
     if (seat.state !== "available") return;
     setPax((cur) => {
-      const existing = cur.find((p) => p.seat_id === seat.seat_id);
-      if (existing) return cur.filter((p) => p.seat_id !== seat.seat_id);
+      if (cur.some((p) => p.seat_id === seat.seat_id)) {
+        return cur.filter((p) => p.seat_id !== seat.seat_id);
+      }
       return [
         ...cur,
         { seat_id: seat.seat_id, seat_label: seat.seat_label, full_name: "", phone: "", type: "adult" },
@@ -81,9 +87,18 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
     setPax((cur) => cur.map((p) => (p.seat_id === seatId ? { ...p, ...patch } : p)));
   }
 
+  function reset() {
+    setDone(null);
+    setScheduleId("");
+    setSeats([]);
+    setPax([]);
+    setInfants([]);
+    setContact({ name: "", phone: "", email: "" });
+    setCopied(false);
+  }
+
   function submit() {
     setError(null);
-    // Default the lead contact from the first passenger if left blank.
     const lead = {
       name: contact.name.trim() || pax[0]?.full_name.trim() || "",
       phone: contact.phone.trim() || pax[0]?.phone.trim() || "",
@@ -92,7 +107,6 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
     startSubmit(async () => {
       const r = await createWalkInBooking({
         scheduleId,
-        method,
         contact: lead,
         passengers: pax.map((p) => ({
           seat_id: p.seat_id,
@@ -103,17 +117,28 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
         infants: infants.filter((i) => i.full_name.trim()),
       });
       if (r.ok) {
-        setDone({ reference: r.reference, amountKobo: r.amountKobo });
-        setScheduleId("");
-        setSeats([]);
-        setPax([]);
-        setInfants([]);
-        setContact({ name: "", phone: "", email: "" });
-        setMethod("cash");
+        setDone({
+          reference: r.reference,
+          amountKobo: r.amountKobo,
+          paymentUrl: r.paymentUrl,
+          emailed: r.emailed,
+          note: r.note,
+        });
       } else {
         setError(r.error);
       }
     });
+  }
+
+  async function copyLink() {
+    if (!done?.paymentUrl) return;
+    try {
+      await navigator.clipboard.writeText(done.paymentUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
   }
 
   if (done) {
@@ -121,24 +146,47 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Ticket className="text-success size-5" /> Walk-in booking confirmed
+            <Check className="text-success size-5" /> Booking {done.reference} reserved
           </CardTitle>
+          <Badge tone="warning">Awaiting payment</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-muted text-sm">
-            Booking <span className="text-foreground font-semibold">{done.reference}</span> is paid
-            ({formatKobo(done.amountKobo)}). The e-ticket is ready to print or send.
+            Seats are held for 30 minutes. Collect {formatKobo(done.amountKobo)} via the payment
+            link below — the passenger can pay by card or bank transfer.
+            {done.emailed
+              ? " A payment link has been emailed to the passenger."
+              : done.paymentUrl
+                ? " Share the payment link with the passenger."
+                : ""}
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Link href={`/bookings/${done.reference}`}>
-              <Button size="sm" variant="primary">
-                View booking &amp; tickets
-              </Button>
-            </Link>
-            <Button size="sm" variant="outline" onClick={() => setDone(null)}>
-              <Plus className="size-4" /> New walk-in
-            </Button>
-          </div>
+
+          {done.paymentUrl ? (
+            <div className="border-border flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center">
+              <code className="text-foreground min-w-0 flex-1 truncate text-xs">
+                {done.paymentUrl}
+              </code>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={copyLink}>
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                <a href={done.paymentUrl} target="_blank" rel="noreferrer">
+                  <Button type="button" size="sm" variant="primary">
+                    <ExternalLink className="size-4" /> Open payment
+                  </Button>
+                </a>
+              </div>
+            </div>
+          ) : (
+            done.note && (
+              <p className="bg-surface-muted text-muted rounded-md px-3 py-2 text-sm">{done.note}</p>
+            )
+          )}
+
+          <Button type="button" size="sm" variant="ghost" onClick={reset}>
+            New walk-in booking
+          </Button>
         </CardContent>
       </Card>
     );
@@ -309,44 +357,23 @@ export function WalkinBooking({ schedules }: { schedules: WalkinSchedule[] }) {
                 />
               </label>
               <label className={labelClass}>
-                Email (optional)
+                Email (for the payment link)
                 <input
                   className={field}
-                  placeholder="For the e-ticket"
+                  placeholder="passenger@email.com"
                   value={contact.email}
                   onChange={(e) => setContact({ ...contact, email: e.target.value })}
                 />
               </label>
             </div>
 
-            <div>
-              <p className={cn(labelClass, "mb-1")}>Payment method</p>
-              <div className="flex flex-wrap gap-2">
-                {METHODS.map((m) => (
-                  <button
-                    key={m.value}
-                    type="button"
-                    onClick={() => setMethod(m.value)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm font-medium",
-                      method === m.value
-                        ? "border-primary text-primary bg-primary-soft"
-                        : "border-border text-muted hover:text-foreground",
-                    )}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="border-border flex items-center justify-between border-t pt-3">
               <span className="text-muted text-sm">
-                Total to collect:{" "}
+                Amount to pay:{" "}
                 <span className="text-foreground text-base font-semibold">{formatKobo(estimate)}</span>
               </span>
               <Button type="button" disabled={submitting} onClick={submit}>
-                {submitting ? "Recording…" : "Record payment & issue ticket"}
+                {submitting ? "Reserving…" : "Create booking & payment link"}
               </Button>
             </div>
           </>

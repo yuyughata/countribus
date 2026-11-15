@@ -2130,57 +2130,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      counter_payments: {
-        Row: {
-          amount_kobo: number;
-          booking_id: string;
-          created_at: string;
-          currency: string;
-          id: string;
-          method: Database["public"]["Enums"]["counter_method"];
-          receipt_ref: string;
-          received_by: string;
-          vendor_id: string;
-        };
-        Insert: {
-          amount_kobo: number;
-          booking_id: string;
-          created_at?: string;
-          currency?: string;
-          id?: string;
-          method: Database["public"]["Enums"]["counter_method"];
-          receipt_ref: string;
-          received_by: string;
-          vendor_id: string;
-        };
-        Update: {
-          amount_kobo?: number;
-          booking_id?: string;
-          created_at?: string;
-          currency?: string;
-          id?: string;
-          method?: Database["public"]["Enums"]["counter_method"];
-          receipt_ref?: string;
-          received_by?: string;
-          vendor_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "counter_payments_booking_id_fkey";
-            columns: ["booking_id"];
-            isOneToOne: true;
-            referencedRelation: "bookings";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "counter_payments_vendor_id_fkey";
-            columns: ["vendor_id"];
-            isOneToOne: false;
-            referencedRelation: "vendors";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       vendor_invitations: {
         Row: {
           accepted_at: string | null;
@@ -2467,8 +2416,6 @@ export type Database = {
           p_contact: Json;
           p_passengers: Json;
           p_infants?: Json;
-          p_method?: Database["public"]["Enums"]["counter_method"];
-          p_receipt_ref?: string;
         };
         Returns: {
           booking_id: string;
@@ -2653,7 +2600,6 @@ export type Database = {
       booking_channel: "online" | "walk_in";
       booking_status: "pending_payment" | "paid" | "failed" | "cancelled" | "refunded" | "expired";
       commission_basis: "base_fare" | "fare_plus_fees";
-      counter_method: "cash" | "pos" | "transfer";
       email_campaign_status: "draft" | "sending" | "sent" | "failed";
       email_campaign_type: "newsletter" | "promotion" | "announcement" | "service_update";
       ledger_entry_type:
@@ -2825,7 +2771,6 @@ export const Constants = {
       booking_channel: ["online", "walk_in"],
       booking_status: ["pending_payment", "paid", "failed", "cancelled", "refunded", "expired"],
       commission_basis: ["base_fare", "fare_plus_fees"],
-      counter_method: ["cash", "pos", "transfer"],
       email_campaign_status: ["draft", "sending", "sent", "failed"],
       email_campaign_type: ["newsletter", "promotion", "announcement", "service_update"],
       ledger_entry_type: [
@@ -2891,4 +2836,3 @@ export type PaymentProvider = Database["public"]["Enums"]["payment_provider"];
 export type LuggageType = Database["public"]["Enums"]["luggage_type"];
 export type PassengerType = Database["public"]["Enums"]["passenger_type"];
 export type BookingChannel = Database["public"]["Enums"]["booking_channel"];
-export type CounterMethod = Database["public"]["Enums"]["counter_method"];

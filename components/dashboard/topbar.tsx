@@ -1,4 +1,5 @@
-import { LogOut, Search } from "lucide-react";
+import Link from "next/link";
+import { Globe, LogOut, Search } from "lucide-react";
 
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { NotificationsBell } from "@/components/dashboard/notifications-bell";
@@ -32,6 +33,14 @@ export function Topbar({
         />
       </div>
       <div className="ml-auto flex items-center gap-3">
+        <Link
+          href="/"
+          aria-label="View public site"
+          className="border-border bg-surface text-muted hover:text-foreground hidden size-9 items-center justify-center rounded-full border sm:flex"
+          title="View site"
+        >
+          <Globe className="size-4" />
+        </Link>
         <NotificationsBell items={notifications} unread={unread} />
         {email && <span className="text-muted hidden text-sm sm:inline">{email}</span>}
         <div

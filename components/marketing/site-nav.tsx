@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { LogOut, Menu, UserCircle, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, UserCircle, X } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,15 @@ import { cn } from "@/lib/utils";
  * `tone="ink"` is the solid light header on interior pages. Collapses to a
  * hamburger menu on phones. `signedIn` is resolved on the server by SiteHeader.
  */
-export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; signedIn: boolean }) {
+export function SiteNav({
+  tone = "ink",
+  signedIn,
+  canDashboard = false,
+}: {
+  tone?: "ink" | "light";
+  signedIn: boolean;
+  canDashboard?: boolean;
+}) {
   const light = tone === "light";
   const [open, setOpen] = useState(false);
 
@@ -54,6 +62,18 @@ export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; si
             </Button>
           </Link>
         ))}
+
+        {canDashboard && (
+          <Link href="/dashboard">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("gap-1.5", light && "text-white hover:bg-white/10")}
+            >
+              <LayoutDashboard className="size-4" /> Dashboard
+            </Button>
+          </Link>
+        )}
 
         {signedIn ? (
           <>
@@ -116,6 +136,16 @@ export function SiteNav({ tone = "ink", signedIn }: { tone?: "ink" | "light"; si
                 {label}
               </Link>
             ))}
+
+            {canDashboard && (
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="text-foreground hover:bg-surface-muted flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium"
+              >
+                <LayoutDashboard className="size-4" /> Dashboard
+              </Link>
+            )}
 
             {signedIn ? (
               <>

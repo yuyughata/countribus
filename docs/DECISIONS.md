@@ -408,27 +408,29 @@ Architecture Decision Record. Append new entries; don't rewrite history.
 
 ## Walk-in (counter) bookings
 
-- **ADR-0036 Counter sales set `paid` outside the webhook rule — deliberately,
-  audited and capability-gated.** The core invariant is that a booking becomes
-  `paid` only from a verified provider webhook (`confirm_payment`, service-role
-  only). A walk-in sale at a terminal is taken in cash, by POS card or by bank
-  transfer and has **no provider webhook**, so it needs a second, controlled path
-  to `paid`. `create_walkin_booking` (SECURITY DEFINER) is that single path. It
-  is justified because: (a) it is restricted inside the function to the schedule's
-  vendor owner/manager/booking officer (or platform admin) via `has_vendor_role`
-  — the same gate as the rest of the booking RPCs, mirrored by the new
-  `booking:counter` capability and the `/dashboard/walk-in` page/nav guard;
-  (b) prices are computed server-side from `schedules.base_fare_kobo` + seat
-  surcharge and the passenger type (client never supplies a fare); (c) seats are
-  claimed with the same concurrency-safe `available -> booked` UPDATE the online
-  flow uses, backed by the `schedule_seats` partial unique index, so a seat can
-  never be double-sold across channels; (d) every sale is audited — the status
-  history records who recorded it and the method, and a one-per-booking
-  `counter_payments` row (unique on `booking_id`) captures method, amount and the
-  staff member who took the money, preventing a duplicate payment record. Online
-  payments remain webhook-only and untouched. New columns `bookings.channel`
-  (`online`/`walk_in`) and `bookings.sold_by` attribute the sale for staff-sales
+- **ADR-0036 Counter sales use the normal payment link, confirmed by the verified
+  webhook — the `paid`-only-from-webhook invariant holds for every channel.**
+  Terminal sales staff create a walk-in booking at `/dashboard/walk-in` (gated by
+  the new `booking:counter` capability + page/nav guard). `create_walkin_booking`
+  (SECURITY DEFINER, authorized inside to the schedule's vendor
+  owner/manager/booking officer or platform admin via `has_vendor_role`) reuses
+  the online pipeline — `hold_seats` + `create_booking_from_hold` — to create a
+  **pending** booking with server-computed fares and concurrency-safe held seats,
+  then stamps `bookings.channel='walk_in'` and `bookings.sold_by` (the attribution
+  columns; it is SECURITY DEFINER because there is no authenticated UPDATE policy
+  on `bookings`). Payment then goes through the **same payment button / Paystack
+  checkout as online** — card or bank transfer (Paystack shows the transfer
+  account details on that page) — and the booking becomes `paid`, seats booked,
+  commission ledger + e-tickets written, **only** from the verified webhook
+  (`confirm_payment`). The passenger is emailed the payment link (no account
+  needed to pay); the staff member also gets the link to share or to read the
+  transfer details. Seats are held for the 30-minute window and auto-expire if
+  unpaid. This supersedes the initial cash/POS counter-payment model (the
+  `counter_payments` table + `counter_method` enum are dropped in
+  `20261116130000`): no booking is ever marked paid without a provider webhook.
+  `bookings.channel` + `bookings.sold_by` attribute the sale for staff-sales
   incentives (a later phase). Validated on the full local migration chain
   (`tests/db/phase11_walkin.sql`: passenger denied, cross-vendor denied, officer
-  succeeds, ledger/tickets/counter-payment created, double-sell blocked, duplicate
-  payment blocked, cross-vendor RLS) and applied live.
+  creates a pending booking with seats held and no ledger/tickets, held seat
+  cannot be double-sold, and the verified webhook then confirms → paid + booked +
+  ledger + tickets with channel/sold_by preserved) and applied live.
