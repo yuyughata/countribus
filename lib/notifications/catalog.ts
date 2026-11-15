@@ -7,6 +7,7 @@ import {
   departureReminderSms,
   partnerAgreementUpdatedEmail,
   payoutSentEmail,
+  teamInviteEmail,
   referralRewardEmail,
   vendorApprovedEmail,
   vendorNewBookingEmail,
@@ -151,6 +152,19 @@ export const TEMPLATE_CATALOG: TemplatePreview[] = [
       vendorName: "Chisco Express",
       version: 2,
       agreementUrl: "https://countribus.app/dashboard/agreement",
+    }),
+  },
+  {
+    key: "team_invite",
+    name: "Team invitation",
+    category: "Operator",
+    channels: ["email"],
+    description: "Invites a new team member by email to join an operator with a role.",
+    trigger: "Owner/manager invites a team member",
+    email: teamInviteEmail({
+      vendorName: "Chisco Express",
+      roleLabel: "Booking Officer",
+      inviteUrl: "https://countribus.app/invite/abc123",
     }),
   },
   {

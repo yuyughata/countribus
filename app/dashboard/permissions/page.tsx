@@ -1,20 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DashboardHeader } from "@/components/dashboard/page-header";
+import { TeamManager } from "@/components/dashboard/team-manager";
 import { requireDashboardCapability } from "@/lib/auth/guard";
-import { firstManageableVendorId } from "@/lib/auth/context";
-import { createClient } from "@/lib/supabase/server";
+import { firstManageableVendorId, roleForVendor } from "@/lib/auth/context";
+import { listPendingInvites, listTeam } from "@/features/team/queries";
 
 export const metadata = { title: "Admin & permissions" };
-
-const ROLE_LABEL: Record<string, string> = {
-  vendor_owner: "Vendor Owner",
-  vendor_manager: "Vendor Manager",
-  booking_officer: "Booking Officer",
-  terminal_staff: "Terminal Staff",
-  luggage_officer: "Luggage Officer",
-  finance_officer: "Finance Officer",
-};
 
 const ROLE_DESC: [string, string][] = [
   ["Vendor Owner", "Full control of the operator: fleet, routes, schedules, staff, finance."],
@@ -29,50 +20,27 @@ export default async function PermissionsPage() {
   const ctx = await requireDashboardCapability("staff:manage");
   const vendorId = firstManageableVendorId(ctx);
 
-  let staff: { user_id: string; full_name: string | null; email: string | null; role: string; is_active: boolean }[] = [];
-  if (vendorId) {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("vendor_staff_list", { p_vendor: vendorId });
-    staff = (data ?? []) as typeof staff;
-  }
+  const [staff, invites] = vendorId
+    ? await Promise.all([listTeam(vendorId), listPendingInvites(vendorId)])
+    : [[], []];
+  const canAssignOwner =
+    ctx.isPlatformAdmin || roleForVendor(ctx, vendorId ?? "") === "vendor_owner";
 
   return (
     <div className="space-y-5 p-5">
       <DashboardHeader
         eyebrow="Access"
         title="Admin & permissions"
-        subtitle="Who can do what in your operator."
+        subtitle="Who can do what in your operator. Assign roles and invite team members."
       />
 
       {vendorId ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Team members</CardTitle>
-            <Badge tone="neutral">{staff.length}</Badge>
-          </CardHeader>
-          <CardContent className="p-0">
-            {staff.length === 0 ? (
-              <p className="text-muted p-6 text-sm">No staff yet.</p>
-            ) : (
-              <div className="divide-border divide-y">
-                {staff.map((s) => (
-                  <div key={s.user_id} className="flex items-center justify-between gap-4 px-5 py-3">
-                    <div className="min-w-0">
-                      <p className="text-foreground truncate text-sm font-semibold">
-                        {s.full_name ?? "Team member"}
-                      </p>
-                      <p className="text-subtle truncate text-xs">{s.email ?? "—"}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!s.is_active && <Badge tone="danger">inactive</Badge>}
-                      <Badge tone="primary">{ROLE_LABEL[s.role] ?? s.role}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <TeamManager
+          vendorId={vendorId}
+          staff={staff}
+          invites={invites}
+          canAssignOwner={canAssignOwner}
+        />
       ) : (
         <Card className="text-muted p-5 text-sm">
           You&apos;re a platform admin. Operator staff are managed by each operator&apos;s owner or

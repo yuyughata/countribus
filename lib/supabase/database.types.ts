@@ -2007,6 +2007,53 @@ export type Database = {
           },
         ];
       };
+      vendor_invitations: {
+        Row: {
+          accepted_at: string | null;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string | null;
+          role: Database["public"]["Enums"]["vendor_role"];
+          status: string;
+          token: string;
+          vendor_id: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          created_at?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role: Database["public"]["Enums"]["vendor_role"];
+          status?: string;
+          token: string;
+          vendor_id: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["vendor_role"];
+          status?: string;
+          token?: string;
+          vendor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vendor_invitations_vendor_id_fkey";
+            columns: ["vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       vendor_payout_accounts: {
         Row: {
           account_name: string;
@@ -2368,6 +2415,20 @@ export type Database = {
       vendor_dashboard_metrics: {
         Args: { p_from?: string; p_to?: string; p_vendor: string };
         Returns: Json;
+      };
+      accept_vendor_invitation: {
+        Args: { p_token: string };
+        Returns: string;
+      };
+      invitation_preview: {
+        Args: { p_token: string };
+        Returns: {
+          vendor_name: string;
+          role: Database["public"]["Enums"]["vendor_role"];
+          email: string;
+          status: string;
+          expired: boolean;
+        }[];
       };
       vendor_staff_list: {
         Args: { p_vendor: string };
