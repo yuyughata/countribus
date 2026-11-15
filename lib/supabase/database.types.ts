@@ -2130,6 +2130,151 @@ export type Database = {
         };
         Relationships: [];
       };
+      staff_incentive_rules: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          effective_to: string | null;
+          fixed_kobo: number | null;
+          id: string;
+          kind: Database["public"]["Enums"]["incentive_kind"];
+          rate_bps: number | null;
+          staff_id: string | null;
+          vendor_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          effective_to?: string | null;
+          fixed_kobo?: number | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["incentive_kind"];
+          rate_bps?: number | null;
+          staff_id?: string | null;
+          vendor_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          effective_to?: string | null;
+          fixed_kobo?: number | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["incentive_kind"];
+          rate_bps?: number | null;
+          staff_id?: string | null;
+          vendor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_incentive_rules_vendor_id_fkey";
+            columns: ["vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      staff_incentive_payments: {
+        Row: {
+          amount_kobo: number;
+          approved_by: string | null;
+          created_at: string;
+          id: string;
+          note: string | null;
+          staff_id: string;
+          vendor_id: string;
+        };
+        Insert: {
+          amount_kobo: number;
+          approved_by?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          staff_id: string;
+          vendor_id: string;
+        };
+        Update: {
+          amount_kobo?: number;
+          approved_by?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          staff_id?: string;
+          vendor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_incentive_payments_vendor_id_fkey";
+            columns: ["vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      staff_incentives: {
+        Row: {
+          amount_kobo: number;
+          basis_kobo: number;
+          booking_id: string;
+          created_at: string;
+          id: string;
+          paid_at: string | null;
+          payment_id: string | null;
+          reversed_at: string | null;
+          rule_id: string | null;
+          staff_id: string;
+          status: Database["public"]["Enums"]["incentive_status"];
+          vendor_id: string;
+        };
+        Insert: {
+          amount_kobo: number;
+          basis_kobo: number;
+          booking_id: string;
+          created_at?: string;
+          id?: string;
+          paid_at?: string | null;
+          payment_id?: string | null;
+          reversed_at?: string | null;
+          rule_id?: string | null;
+          staff_id: string;
+          status?: Database["public"]["Enums"]["incentive_status"];
+          vendor_id: string;
+        };
+        Update: {
+          amount_kobo?: number;
+          basis_kobo?: number;
+          booking_id?: string;
+          created_at?: string;
+          id?: string;
+          paid_at?: string | null;
+          payment_id?: string | null;
+          reversed_at?: string | null;
+          rule_id?: string | null;
+          staff_id?: string;
+          status?: Database["public"]["Enums"]["incentive_status"];
+          vendor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_incentives_booking_id_fkey";
+            columns: ["booking_id"];
+            isOneToOne: true;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "staff_incentives_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "staff_incentive_payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       vendor_invitations: {
         Row: {
           accepted_at: string | null;
@@ -2423,6 +2568,32 @@ export type Database = {
           amount_kobo: number;
         }[];
       };
+      set_staff_incentive_rule: {
+        Args: {
+          p_vendor: string;
+          p_staff: string | null;
+          p_kind: Database["public"]["Enums"]["incentive_kind"];
+          p_fixed_kobo?: number | null;
+          p_rate_bps?: number | null;
+        };
+        Returns: string;
+      };
+      record_staff_incentive_payment: {
+        Args: { p_vendor: string; p_staff: string; p_note?: string };
+        Returns: { payment_id: string; amount_kobo: number }[];
+      };
+      staff_sales_performance: {
+        Args: { p_vendor: string };
+        Returns: {
+          staff_id: string;
+          staff_name: string;
+          sales_count: number;
+          gross_sold_kobo: number;
+          incentive_pending_kobo: number;
+          incentive_paid_kobo: number;
+          incentive_total_kobo: number;
+        }[];
+      };
       current_vendor_ids: { Args: never; Returns: string[] };
       declare_luggage: {
         Args: { p_booking: string; p_items: Json };
@@ -2602,6 +2773,8 @@ export type Database = {
       commission_basis: "base_fare" | "fare_plus_fees";
       email_campaign_status: "draft" | "sending" | "sent" | "failed";
       email_campaign_type: "newsletter" | "promotion" | "announcement" | "service_update";
+      incentive_kind: "fixed" | "percent";
+      incentive_status: "pending" | "paid" | "reversed";
       ledger_entry_type:
         | "booking_gross"
         | "platform_commission"
@@ -2773,6 +2946,8 @@ export const Constants = {
       commission_basis: ["base_fare", "fare_plus_fees"],
       email_campaign_status: ["draft", "sending", "sent", "failed"],
       email_campaign_type: ["newsletter", "promotion", "announcement", "service_update"],
+      incentive_kind: ["fixed", "percent"],
+      incentive_status: ["pending", "paid", "reversed"],
       ledger_entry_type: [
         "booking_gross",
         "platform_commission",

@@ -434,3 +434,30 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   creates a pending booking with seats held and no ledger/tickets, held seat
   cannot be double-sold, and the verified webhook then confirms → paid + booked +
   ledger + tickets with channel/sold_by preserved) and applied live.
+
+## Staff sales incentives
+
+- **ADR-0037 Owner-configured staff incentives, accrued on payment, reversed on
+  cancel.** Phase 2 of the counter/incentives/reconciliation plan, keyed off the
+  `bookings.sold_by` attribution added with walk-in. Owners configure **fixed
+  (kobo) or percentage (bps)** incentives, either vendor-wide (a default for all
+  staff) or per staff member, via `set_staff_incentive_rule` (owner/admin only).
+  Rules are effective-dated (setting a new rate closes the current one), and a
+  staff-specific rule overrides the vendor-wide default (`resolve_staff_incentive_rule`).
+  A decoupled `AFTER UPDATE OF status` trigger (`accrue_staff_incentive`, separate
+  from the money path) accrues a `staff_incentives` row (one per booking) when a
+  **staff-attributed** booking becomes paid — amount recomputed server-side from
+  the resolved rule — and **reverses** a still-pending accrual if the booking is
+  later cancelled/refunded. Online bookings have `sold_by = NULL` and never
+  accrue. `staff_sales_performance` reports per-staff sales count, gross sold and
+  pending/paid/total incentive (owner/manager/finance/admin). Owners approve and
+  record payouts via `record_staff_incentive_payment`, which sums outstanding
+  (pending) accruals into a `staff_incentive_payments` row and marks them paid
+  (amount recomputed server-side, never trusted from the client). New
+  `incentive:manage` capability (vendor owner + super admin) gates the
+  `/dashboard/incentives` console and the write actions; RLS limits all three
+  tables to the owning vendor + admin, with writes only through the SECURITY
+  DEFINER functions. Validated in `tests/db/phase12_incentives.sql` (8 checks:
+  owner-only rule config, per-staff override wins, accrual on paid, reversal on
+  cancel, payout settles pending, performance aggregate, cross-vendor RLS) and
+  applied live.
