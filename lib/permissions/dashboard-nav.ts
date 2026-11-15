@@ -36,6 +36,10 @@ export function userHasCapability(ctx: AuthContext, cap: Capability): boolean {
 
 /** Can the user reach a dashboard href? */
 export function canAccessHref(ctx: AuthContext, href: string): boolean {
+  // The vendor "Partner agreement" signing page is for operators. Platform
+  // admins author/countersign clauses under "Agreements" instead, so it is
+  // hidden from their menu (visiting it redirects them there).
+  if (href === "/dashboard/agreement" && ctx.isPlatformAdmin) return false;
   const cap = DASHBOARD_NAV_CAP[href];
   if (!cap) return true;
   return userHasCapability(ctx, cap);

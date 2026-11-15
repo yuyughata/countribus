@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { Card } from "@/components/ui/card";
 import { DashboardHeader } from "@/components/dashboard/page-header";
 import { AgreementSigner } from "@/components/dashboard/agreements/agreement-signer";
@@ -9,6 +11,11 @@ export const metadata = { title: "Partner agreement" };
 
 export default async function VendorAgreementPage() {
   const ctx = await requireDashboardCapability("vendor:manage_own");
+
+  // Platform admins don't sign — they author the clauses every operator signs.
+  // Send them to the Agreements editor (add/edit/delete clauses + countersign).
+  if (ctx.isPlatformAdmin) redirect("/dashboard/agreements/partner");
+
   const vendorId = firstManageableVendorId(ctx);
 
   return (
