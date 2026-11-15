@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import QRCode from "qrcode";
+import { Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
 import { SiteHeader } from "@/components/marketing/site-chrome";
@@ -54,9 +56,16 @@ export default async function BookingDetailPage({
     <>
       <SiteHeader />
       <main className="mx-auto max-w-2xl space-y-5 px-4 py-8 sm:px-6">
-        <Link href="/bookings" className="text-muted hover:text-foreground text-sm">
-          ← My bookings
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/bookings" className="text-muted hover:text-foreground text-sm">
+            ← My bookings
+          </Link>
+          <Link href="/search" className="shrink-0">
+            <Button size="sm" variant="outline" className="gap-1.5">
+              <Plus className="size-4" /> New booking
+            </Button>
+          </Link>
+        </div>
 
         {booking.status === "paid" && (
           <div className="bg-success-soft text-success flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium">
@@ -66,109 +75,109 @@ export default async function BookingDetailPage({
         )}
 
         <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            {booking.reference}
-            <Badge tone={tone[booking.status] ?? "neutral"}>
-              {booking.status.replace("_", " ")}
-            </Badge>
-          </CardTitle>
-          {(booking.status === "pending_payment" || booking.status === "paid") && (
-            <CancelBookingButton bookingId={booking.id} reference={booking.reference} />
-          )}
-        </CardHeader>
-        <CardContent className="text-muted space-y-3 text-sm">
-          <div className="space-y-1">
-            <p className="text-foreground text-base font-semibold">
-              {booking.schedules?.origin?.name} → {booking.schedules?.destination?.name}
-            </p>
-            <p>
-              {booking.vendors?.name} ·{" "}
-              {booking.schedules
-                ? new Date(booking.schedules.departure_at).toLocaleString("en-NG")
-                : ""}
-            </p>
-            <p>Total paid: {formatKobo(booking.grand_total_kobo)}</p>
-          </div>
-
-          <div className="border-border grid gap-3 border-t pt-3 sm:grid-cols-2">
-            <div>
-              <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
-                Boarding address
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              {booking.reference}
+              <Badge tone={tone[booking.status] ?? "neutral"}>
+                {booking.status.replace("_", " ")}
+              </Badge>
+            </CardTitle>
+            {(booking.status === "pending_payment" || booking.status === "paid") && (
+              <CancelBookingButton bookingId={booking.id} reference={booking.reference} />
+            )}
+          </CardHeader>
+          <CardContent className="text-muted space-y-3 text-sm">
+            <div className="space-y-1">
+              <p className="text-foreground text-base font-semibold">
+                {booking.schedules?.origin?.name} → {booking.schedules?.destination?.name}
               </p>
-              <p className="text-foreground mt-0.5">
-                {booking.schedules?.boarding_address ||
-                  booking.schedules?.origin?.address ||
-                  booking.schedules?.origin?.name ||
-                  "—"}
+              <p>
+                {booking.vendors?.name} ·{" "}
+                {booking.schedules
+                  ? new Date(booking.schedules.departure_at).toLocaleString("en-NG")
+                  : ""}
               </p>
+              <p>Total paid: {formatKobo(booking.grand_total_kobo)}</p>
             </div>
-            <div>
-              <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
-                Contact number
-              </p>
-              <p className="text-foreground mt-0.5">
-                {booking.schedules?.boarding_contact_phone ||
-                  booking.vendors?.contact_phone ||
-                  "—"}
-              </p>
+
+            <div className="border-border grid gap-3 border-t pt-3 sm:grid-cols-2">
+              <div>
+                <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
+                  Boarding address
+                </p>
+                <p className="text-foreground mt-0.5">
+                  {booking.schedules?.boarding_address ||
+                    booking.schedules?.origin?.address ||
+                    booking.schedules?.origin?.name ||
+                    "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-accent text-[11px] font-semibold tracking-wide uppercase">
+                  Contact number
+                </p>
+                <p className="text-foreground mt-0.5">
+                  {booking.schedules?.boarding_contact_phone ||
+                    booking.vendors?.contact_phone ||
+                    "—"}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {booking.status === "pending_payment" && (
-            <p className="text-warning">
-              Payment pending — your seats are held while you complete payment.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            {booking.status === "pending_payment" && (
+              <p className="text-warning">
+                Payment pending — your seats are held while you complete payment.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-      <div>
-        <h2 className="text-foreground mb-2 text-sm font-semibold">Passengers & tickets</h2>
-        <div className="space-y-3">
-          {passengers.map((p, i) => {
-            const t = ticketByPassenger.get(
-              (p as unknown as { passenger_id?: string }).passenger_id ?? "",
-            );
-            return (
-              <Card key={i} className="flex items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="text-foreground flex items-center gap-2 text-sm font-semibold">
-                    {p.passengers?.full_name}
-                    <span className="bg-surface-muted text-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
-                      {PASSENGER_TYPE_LABEL[p.passenger_type]}
-                    </span>
-                  </p>
-                  <p className="text-muted text-xs">
-                    {p.seat_label ? `Seat ${p.seat_label}` : "Lap infant (no seat)"} ·{" "}
-                    {p.fare_kobo === 0 ? "Free" : formatKobo(p.fare_kobo)} ·{" "}
-                    {p.boarding_status.replace("_", " ")}
-                  </p>
-                </div>
-                {booking.status === "paid" && t?.status === "active" ? (
-                  <div className="flex flex-col items-center gap-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={qrByToken[t.id]}
-                      alt="Ticket QR"
-                      className="size-20 rounded bg-white p-1"
-                    />
-                    <a
-                      href={`/api/tickets/${t.id}/pdf`}
-                      className="text-primary text-xs font-medium"
-                    >
-                      Download PDF
-                    </a>
+        <div>
+          <h2 className="text-foreground mb-2 text-sm font-semibold">Passengers & tickets</h2>
+          <div className="space-y-3">
+            {passengers.map((p, i) => {
+              const t = ticketByPassenger.get(
+                (p as unknown as { passenger_id?: string }).passenger_id ?? "",
+              );
+              return (
+                <Card key={i} className="flex items-center justify-between gap-4 p-4">
+                  <div>
+                    <p className="text-foreground flex items-center gap-2 text-sm font-semibold">
+                      {p.passengers?.full_name}
+                      <span className="bg-surface-muted text-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
+                        {PASSENGER_TYPE_LABEL[p.passenger_type]}
+                      </span>
+                    </p>
+                    <p className="text-muted text-xs">
+                      {p.seat_label ? `Seat ${p.seat_label}` : "Lap infant (no seat)"} ·{" "}
+                      {p.fare_kobo === 0 ? "Free" : formatKobo(p.fare_kobo)} ·{" "}
+                      {p.boarding_status.replace("_", " ")}
+                    </p>
                   </div>
-                ) : (
-                  <span className="text-subtle text-xs">
-                    {booking.status === "paid" ? "ticket voided" : "ticket after payment"}
-                  </span>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                  {booking.status === "paid" && t?.status === "active" ? (
+                    <div className="flex flex-col items-center gap-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrByToken[t.id]}
+                        alt="Ticket QR"
+                        className="size-20 rounded bg-white p-1"
+                      />
+                      <a
+                        href={`/api/tickets/${t.id}/pdf`}
+                        className="text-primary text-xs font-medium"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  ) : (
+                    <span className="text-subtle text-xs">
+                      {booking.status === "paid" ? "ticket voided" : "ticket after payment"}
+                    </span>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex justify-center pt-2">
