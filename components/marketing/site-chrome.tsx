@@ -70,6 +70,19 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center">
           <PoweredBy tone="light" />
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {(
+              [
+                ["Terms", "/terms"],
+                ["Privacy", "/privacy"],
+                ["Boarding policy", "/boarding-policy"],
+              ] as [string, string][]
+            ).map(([label, href]) => (
+              <Link key={href} href={href} className="transition-colors hover:text-white">
+                {label}
+              </Link>
+            ))}
+          </nav>
           <p>© {new Date().getFullYear()} Countribus. All rights reserved.</p>
         </div>
       </div>

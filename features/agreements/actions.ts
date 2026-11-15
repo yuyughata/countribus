@@ -18,6 +18,8 @@ function revalidate(kind: AgreementKind) {
   revalidatePath(`/dashboard/agreements/${kind}`);
   revalidatePath("/apply");
   revalidatePath("/boarding-policy");
+  revalidatePath("/terms");
+  revalidatePath("/privacy");
 }
 
 /** Publish a new version if the visible clauses changed (server dedups by hash). */
