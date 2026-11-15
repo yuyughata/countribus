@@ -12,7 +12,10 @@ import { getAuthContext } from "@/lib/auth/context";
  */
 export async function SiteHeader({ tone = "ink" }: { tone?: "ink" | "light" }) {
   const ctx = await getAuthContext().catch(() => null);
-  return <SiteNav tone={tone} signedIn={Boolean(ctx)} />;
+  // Admins and vendor staff get a Dashboard link so they can move between the
+  // public site and their console without retyping the URL.
+  const canDashboard = Boolean(ctx && (ctx.isPlatformAdmin || ctx.memberships.length > 0));
+  return <SiteNav tone={tone} signedIn={Boolean(ctx)} canDashboard={canDashboard} />;
 }
 
 export function SiteFooter() {

@@ -64,7 +64,11 @@ export function SidebarNav({
 export function SidebarBrand() {
   return (
     <div className="flex items-center gap-2 px-5 py-5">
-      <Logo className="text-xl" />
+      {/* Logo returns to the public homepage so staff can move between the site
+          and the console seamlessly. */}
+      <Link href="/" aria-label="Countribus homepage">
+        <Logo className="text-xl" />
+      </Link>
       <span className="bg-accent-soft text-accent-strong ring-accent/20 ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ring-1">
         Portal
       </span>

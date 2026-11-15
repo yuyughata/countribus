@@ -405,3 +405,32 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   the live policy, and the boarding policy is appended to every booking
   confirmation email. Verified end-to-end (sign → counter-sign → PDF 200) and the
   version-bump/dedup with a local DB test.
+
+## Walk-in (counter) bookings
+
+- **ADR-0036 Counter sales use the normal payment link, confirmed by the verified
+  webhook — the `paid`-only-from-webhook invariant holds for every channel.**
+  Terminal sales staff create a walk-in booking at `/dashboard/walk-in` (gated by
+  the new `booking:counter` capability + page/nav guard). `create_walkin_booking`
+  (SECURITY DEFINER, authorized inside to the schedule's vendor
+  owner/manager/booking officer or platform admin via `has_vendor_role`) reuses
+  the online pipeline — `hold_seats` + `create_booking_from_hold` — to create a
+  **pending** booking with server-computed fares and concurrency-safe held seats,
+  then stamps `bookings.channel='walk_in'` and `bookings.sold_by` (the attribution
+  columns; it is SECURITY DEFINER because there is no authenticated UPDATE policy
+  on `bookings`). Payment then goes through the **same payment button / Paystack
+  checkout as online** — card or bank transfer (Paystack shows the transfer
+  account details on that page) — and the booking becomes `paid`, seats booked,
+  commission ledger + e-tickets written, **only** from the verified webhook
+  (`confirm_payment`). The passenger is emailed the payment link (no account
+  needed to pay); the staff member also gets the link to share or to read the
+  transfer details. Seats are held for the 30-minute window and auto-expire if
+  unpaid. This supersedes the initial cash/POS counter-payment model (the
+  `counter_payments` table + `counter_method` enum are dropped in
+  `20261116130000`): no booking is ever marked paid without a provider webhook.
+  `bookings.channel` + `bookings.sold_by` attribute the sale for staff-sales
+  incentives (a later phase). Validated on the full local migration chain
+  (`tests/db/phase11_walkin.sql`: passenger denied, cross-vendor denied, officer
+  creates a pending booking with seats held and no ledger/tickets, held seat
+  cannot be double-sold, and the verified webhook then confirms → paid + booked +
+  ledger + tickets with channel/sold_by preserved) and applied live.

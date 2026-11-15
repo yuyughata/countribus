@@ -13,6 +13,7 @@ export const DASHBOARD_NAV_CAP: Record<string, Capability | null> = {
   "/dashboard/fleet": "vehicle:manage",
   "/dashboard/routes": "route:manage",
   "/dashboard/schedules": "schedule:manage",
+  "/dashboard/walk-in": "booking:counter",
   "/dashboard/finance": "finance:view",
   "/dashboard/reports": "finance:view",
   "/dashboard/manifests": "manifest:view",

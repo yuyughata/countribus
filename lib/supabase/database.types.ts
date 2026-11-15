@@ -270,6 +270,7 @@ export type Database = {
           contact_email: string | null;
           contact_name: string;
           contact_phone: string;
+          channel: Database["public"]["Enums"]["booking_channel"];
           created_at: string;
           created_by: string | null;
           currency: string;
@@ -284,6 +285,7 @@ export type Database = {
           reference: string;
           referral_reward_id: string | null;
           schedule_id: string;
+          sold_by: string | null;
           status: Database["public"]["Enums"]["booking_status"];
           terms_accepted_at: string | null;
           total_fare_kobo: number;
@@ -296,6 +298,7 @@ export type Database = {
           contact_email?: string | null;
           contact_name: string;
           contact_phone: string;
+          channel?: Database["public"]["Enums"]["booking_channel"];
           created_at?: string;
           created_by?: string | null;
           currency?: string;
@@ -310,6 +313,7 @@ export type Database = {
           reference: string;
           referral_reward_id?: string | null;
           schedule_id: string;
+          sold_by?: string | null;
           status?: Database["public"]["Enums"]["booking_status"];
           terms_accepted_at?: string | null;
           total_fare_kobo: number;
@@ -322,6 +326,7 @@ export type Database = {
           contact_email?: string | null;
           contact_name?: string;
           contact_phone?: string;
+          channel?: Database["public"]["Enums"]["booking_channel"];
           created_at?: string;
           created_by?: string | null;
           currency?: string;
@@ -336,6 +341,7 @@ export type Database = {
           reference?: string;
           referral_reward_id?: string | null;
           schedule_id?: string;
+          sold_by?: string | null;
           status?: Database["public"]["Enums"]["booking_status"];
           terms_accepted_at?: string | null;
           total_fare_kobo?: number;
@@ -2404,6 +2410,19 @@ export type Database = {
           reference: string;
         }[];
       };
+      create_walkin_booking: {
+        Args: {
+          p_schedule: string;
+          p_contact: Json;
+          p_passengers: Json;
+          p_infants?: Json;
+        };
+        Returns: {
+          booking_id: string;
+          reference: string;
+          amount_kobo: number;
+        }[];
+      };
       current_vendor_ids: { Args: never; Returns: string[] };
       declare_luggage: {
         Args: { p_booking: string; p_items: Json };
@@ -2578,6 +2597,7 @@ export type Database = {
     Enums: {
       boarding_event_kind: "checked_in" | "boarded" | "no_show";
       boarding_status: "not_checked_in" | "checked_in" | "boarded" | "no_show";
+      booking_channel: "online" | "walk_in";
       booking_status: "pending_payment" | "paid" | "failed" | "cancelled" | "refunded" | "expired";
       commission_basis: "base_fare" | "fare_plus_fees";
       email_campaign_status: "draft" | "sending" | "sent" | "failed";
@@ -2748,6 +2768,7 @@ export const Constants = {
     Enums: {
       boarding_event_kind: ["checked_in", "boarded", "no_show"],
       boarding_status: ["not_checked_in", "checked_in", "boarded", "no_show"],
+      booking_channel: ["online", "walk_in"],
       booking_status: ["pending_payment", "paid", "failed", "cancelled", "refunded", "expired"],
       commission_basis: ["base_fare", "fare_plus_fees"],
       email_campaign_status: ["draft", "sending", "sent", "failed"],
@@ -2814,3 +2835,4 @@ export type BookingStatus = Database["public"]["Enums"]["booking_status"];
 export type PaymentProvider = Database["public"]["Enums"]["payment_provider"];
 export type LuggageType = Database["public"]["Enums"]["luggage_type"];
 export type PassengerType = Database["public"]["Enums"]["passenger_type"];
+export type BookingChannel = Database["public"]["Enums"]["booking_channel"];
