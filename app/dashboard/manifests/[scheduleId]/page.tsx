@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ArrowLeft, Download, Luggage } from "lucide-react";
+import { ArrowLeft, Download, FileDown, Luggage } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,11 +49,18 @@ export default async function ManifestPage({
             {boarded} boarded · <Luggage className="inline size-3.5" /> {luggageTotal} bags
           </p>
         </div>
-        <a href={`/api/manifests/${scheduleId}/csv`}>
-          <Button variant="outline" size="sm" className="gap-1">
-            <Download className="size-4" /> Export CSV
-          </Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={`/api/manifests/${scheduleId}/csv`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <Download className="size-4" /> Export CSV
+            </Button>
+          </a>
+          <a href={`/api/manifests/${scheduleId}/pdf`} download>
+            <Button variant="outline" size="sm" className="gap-1">
+              <FileDown className="size-4" /> Download PDF
+            </Button>
+          </a>
+        </div>
       </div>
 
       <Card>
