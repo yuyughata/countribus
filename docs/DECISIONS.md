@@ -486,3 +486,11 @@ Architecture Decision Record. Append new entries; don't rewrite history.
   revenue + commission/net + passengers, unreconciled count + detail, per-vehicle
   loads, non-admin blocked from the platform view, cross-vendor blocked) and
   applied live.
+
+- **ADR-0037a Staff incentives merged into Team management.** The former "Admin &
+  permissions" page is renamed **Team management** (`/dashboard/permissions`,
+  `staff:manage`) and now also hosts the staff sales-incentive console as a
+  "Sales incentives" section, shown only to those with `incentive:manage`
+  (vendor owner / platform admin) — a manager sees roles & invites only. The
+  separate "Staff incentives" nav item is removed and `/dashboard/incentives`
+  redirects to Team management.
