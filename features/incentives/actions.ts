@@ -38,7 +38,7 @@ export async function setIncentiveRule(input: SetRuleInput): Promise<ActionResul
   if (error) return { ok: false, error: error.message };
 
   const { revalidatePath } = await import("next/cache");
-  revalidatePath("/dashboard/incentives");
+  revalidatePath("/dashboard/permissions");
   return { ok: true };
 }
 
@@ -64,6 +64,6 @@ export async function payStaffIncentive(
   const row = (data as { payment_id: string; amount_kobo: number }[])[0];
 
   const { revalidatePath } = await import("next/cache");
-  revalidatePath("/dashboard/incentives");
+  revalidatePath("/dashboard/permissions");
   return { ok: true, amountKobo: row?.amount_kobo ?? 0 };
 }
